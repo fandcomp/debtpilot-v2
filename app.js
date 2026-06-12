@@ -25,21 +25,14 @@ const DEFAULT_STATE = {
     password: 'monitor123',
   },
   settings: {
-    monthlyTarget: 3000000,
-    targetDate: '2027-03-31',
+    monthlyTarget: 0,
+    targetDate: '',
     showAnalytics: true,
   },
   uploads: [], // New: Upload data
   transaksi: [], // New: Transaksi data
   laporan: [], // New: Laporan data
-  debts: [
-    { platform: 'Bank Jago', initialDebt: 9600000, dueDate: '2026-10-15', priority: 1 },
-    { platform: 'Blu by BCA', initialDebt: 4800000, dueDate: '2026-09-20', priority: 2 },
-    { platform: 'SPay', initialDebt: 3250000, dueDate: '2026-08-30', priority: 2 },
-    { platform: 'GoPay', initialDebt: 2150000, dueDate: '2026-07-31', priority: 3 },
-    { platform: 'SeaBank', initialDebt: 6700000, dueDate: '2026-09-10', priority: 1 },
-    { platform: 'Arsanta', initialDebt: 5500000, dueDate: '2026-10-05', priority: 4 },
-  ],
+  debts: [],
   payments: [],
 };
 
