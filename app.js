@@ -40,21 +40,7 @@ const DEFAULT_STATE = {
     { platform: 'SeaBank', initialDebt: 6700000, dueDate: '2026-09-10', priority: 1 },
     { platform: 'Arsanta', initialDebt: 5500000, dueDate: '2026-10-05', priority: 4 },
   ],
-  payments: [
-    { id: 'p-001', platform: 'Bank Jago', amount: 500000, date: '2026-01-05', method: 'Transfer bank', notes: 'Bayar cicilan awal' },
-    { id: 'p-002', platform: 'SeaBank', amount: 650000, date: '2026-01-18', method: 'Auto-debit', notes: 'Debit bulanan' },
-    { id: 'p-003', platform: 'Blu by BCA', amount: 1200000, date: '2026-02-10', method: 'E-wallet', notes: 'Pembayaran sebelum gajian' },
-    { id: 'p-004', platform: 'Arsanta', amount: 700000, date: '2026-02-28', method: 'Transfer bank', notes: 'Top up pelunasan' },
-    { id: 'p-005', platform: 'Bank Jago', amount: 1100000, date: '2026-03-12', method: 'Transfer bank', notes: 'Bayar tambahan' },
-    { id: 'p-006', platform: 'SPay', amount: 450000, date: '2026-03-20', method: 'E-wallet', notes: 'Pembayaran minimum' },
-    { id: 'p-007', platform: 'SeaBank', amount: 900000, date: '2026-04-02', method: 'Transfer bank', notes: 'Pengurangan principal' },
-    { id: 'p-008', platform: 'Arsanta', amount: 850000, date: '2026-04-18', method: 'Cash', notes: 'Setor tunai' },
-    { id: 'p-009', platform: 'GoPay', amount: 650000, date: '2026-05-04', method: 'E-wallet', notes: 'Cicilan rutin' },
-    { id: 'p-010', platform: 'SPay', amount: 600000, date: '2026-05-15', method: 'Transfer bank', notes: 'Tambahan bayar' },
-    { id: 'p-011', platform: 'Bank Jago', amount: 1100000, date: '2026-05-22', method: 'Transfer bank', notes: 'Pembayaran besar' },
-    { id: 'p-012', platform: 'SeaBank', amount: 1600000, date: '2026-06-01', method: 'Auto-debit', notes: 'Penarikan otomatis' },
-    { id: 'p-013', platform: 'Arsanta', amount: 1450000, date: '2026-06-08', method: 'Transfer bank', notes: 'Percepatan pelunasan' },
-  ],
+  payments: [],
 };
 
 // ========== FORMATTER UTILITIES ==========
@@ -387,8 +373,7 @@ function renderRoleBasedUI() {
 
 // ========== RENDER: LOGIN & SIDEBAR ==========
 function renderLoginHint() {
-  const usersList = USERS_DB.map(u => `${u.username} / ${u.password}`).join(', ');
-  els.loginHint.textContent = `Silakan login dengan salah satu akun: ${usersList}`;
+  els.loginHint.textContent = `Silahkan login untuk melanjutkan.`;
   els.loginUsername.value = '';
   els.loginPassword.value = '';
 }
@@ -463,9 +448,9 @@ function renderInsights() {
 function buildDonutChart(paid, remaining) {
   const total = paid + remaining || 1;
   const paidRatio = paid / total;
-  const size = 260;
-  const stroke = 24;
-  const radius = 88;
+  const size = 240;
+  const stroke = 20;
+  const radius = 80;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - paidRatio);
   return `
@@ -503,9 +488,9 @@ function buildLineChart(series) {
     return emptyChart('Belum ada riwayat pembayaran');
   }
 
-  const width = 760;
-  const height = 260;
-  const padding = { top: 24, right: 28, bottom: 48, left: 44 };
+  const width = 720;
+  const height = 240;
+  const padding = { top: 20, right: 24, bottom: 44, left: 40 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const maxValue = Math.max(...series.map((point) => point.value), 1);
@@ -555,10 +540,10 @@ function buildLineChart(series) {
 }
 
 function buildBarChart(summaries) {
-  const width = 760;
-  const barHeight = 42;
-  const gap = 18;
-  const padding = { top: 22, right: 30, bottom: 18, left: 168 };
+  const width = 720;
+  const barHeight = 38;
+  const gap = 16;
+  const padding = { top: 20, right: 28, bottom: 16, left: 160 };
   const height = padding.top + padding.bottom + summaries.length * (barHeight + gap) - gap;
   const maxValue = Math.max(...summaries.map((item) => item.remaining), 1);
   const bars = summaries.map((item, index) => {
