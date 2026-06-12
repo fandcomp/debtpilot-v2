@@ -1,0 +1,200 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    DebtPilot v2.0 - GitHub Push Instructions
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ CODE IS READY TO PUSH!
+
+Commit sudah dibuat dengan message:
+  "feat: DebtPilot v2.0 - Multi-user auth, upload, transaksi, laporan"
+
+16 files sudah staged & committed:
+  - app.js, index.html, styles.css (application)
+  - 13 documentation files
+  - Total: 7,935 insertions
+
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: CREATE REPOSITORY DI GITHUB (5 menit)
+─────────────────────────────────────────────────────────────────────────────
+
+1. Buka: https://github.com/new
+
+2. Isi form:
+   Repository name: debtpilot-v2
+   Description: Multi-user debt tracking dashboard with upload & approval system
+   Public: Yes (checkmark)
+
+3. Click "Create repository"
+
+4. Halaman akan menampilkan quick setup guide
+   COPY URL repository-nya dari instruction:
+
+   Lihat di bagian "...or push an existing repository from the command line"
+
+   URL format: https://github.com/YOUR_USERNAME/debtpilot-v2.git
+   Contoh: https://github.com/hanifabdulkarimafandi/debtpilot-v2.git
+
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 2: PUSH KE GITHUB (2 menit)
+─────────────────────────────────────────────────────────────────────────────
+
+Copy & paste commands berikut ke PowerShell/CMD (dalam folder Monitor):
+
+```
+cd "e:\Kerjaan\Monitor"
+
+git remote add origin https://github.com/YOUR_USERNAME/debtpilot-v2.git
+
+git branch -M main
+
+git push -u origin main
+```
+
+GANTI: YOUR_USERNAME dengan username GitHub Anda
+CONTOH:
+git remote add origin https://github.com/hanifabdulkarimafandi/debtpilot-v2.git
+
+Tunggu proses push selesai (~30 detik)
+
+Jika muncul prompt GitHub credentials:
+  - Username: input GitHub username Anda
+  - Password: input GitHub password Anda
+
+OR jika pakai token:
+  - Username: input "hanifabdulkarimafandi"
+  - Password: paste GitHub personal access token
+
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 3: VERIFY PUSH (1 menit)
+─────────────────────────────────────────────────────────────────────────────
+
+1. Buka browser: https://github.com/YOUR_USERNAME/debtpilot-v2
+
+2. Verifikasi:
+   ✅ Repository muncul
+   ✅ 16 files terlihat
+   ✅ Commit message terlihat
+   ✅ Code visible
+
+3. Copy repository URL untuk Step berikutnya
+
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 4: DEPLOY KE NETLIFY (3-5 menit)
+─────────────────────────────────────────────────────────────────────────────
+
+1. Buka: https://app.netlify.com
+
+2. Login dengan GitHub account Anda
+   (Authorize Netlify jika diminta)
+
+3. Click "New site from Git"
+
+4. Click "GitHub"
+
+5. Authorize jika diminta
+
+6. Search "debtpilot-v2" di repository list
+
+7. Click repository untuk select
+
+8. Build settings (auto-configured):
+   Build command: (kosongkan)
+   Publish directory: . (or auto-detect)
+
+   Click "Deploy site"
+
+9. Tunggu deployment (2-5 menit)
+   Lihat progress di Netlify dashboard
+   Status akan jadi "Published" ✅
+
+10. Copy live URL:
+    Format: https://debtpilot-v2-xxxxx.netlify.app
+
+    Ini adalah link yang bisa dibagikan ke orang lain!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 5: TEST APLIKASI (3-5 menit)
+─────────────────────────────────────────────────────────────────────────────
+
+Buka URL di browser:
+https://debtpilot-v2-xxxxx.netlify.app
+
+Login Test:
+
+ABI (Regular User):
+  Username: abi
+  Password: abdulhadi
+  Can: Upload, View Laporan (read-only), Dashboard
+  Cannot: Access Transaksi
+
+UMI (Regular User):
+  Username: umi
+  Password: rohmah
+  Can: Upload, View Laporan (read-only), Dashboard
+  Cannot: Access Transaksi
+
+AIM (Admin):
+  Username: aim
+  Password: hafandi
+  Can: Everything
+  Special: Access Transaksi, Approve uploads, Edit laporan
+
+Test Workflow:
+  1. Login as ABI
+  2. Upload image + nominal
+  3. Logout
+  4. Login as AIM
+  5. Go to Transaksi
+  6. Select platform & input keterangan
+  7. Click "Approve & Simpan"
+  8. Go to Laporan
+  9. Verify data is there
+  10. Done! ✅
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING
+─────────────────────────────────────────────────────────────────────────────
+
+Git Push Error:
+  "fatal: not a git repository"
+  → Sudah solved (git init sudah done)
+
+GitHub credentials error:
+  "fatal: could not read Username"
+  → Generate personal access token di GitHub settings
+
+Deploy fails:
+  "Build error"
+  → Check Netlify deployment logs untuk error details
+
+Application not loading:
+  → Clear browser cache (Ctrl+Shift+Del)
+  → Check F12 console untuk JavaScript errors
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SUMMARY
+─────────────────────────────────────────────────────────────────────────────
+
+Code Status: ✅ READY
+  - Git initialized
+  - Files staged
+  - Commit created
+  - Ready to push
+
+Next Action: Push to GitHub (STEP 2 di atas)
+
+Total Time: 10-15 minutes untuk semua steps
+
+Result: Live application di internet dengan live URL!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Kapan Anda siap? Saya siap help kapan saja! 🚀
+
+Status: ✅ Ready to Deploy

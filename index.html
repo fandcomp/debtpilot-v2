@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DebtPilot | Personal Debt Dashboard</title>
+  <meta name="description" content="Dashboard pelunasan utang pribadi dengan login tunggal, grafik, histori pembayaran, dan pengaturan target.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-grid"></div>
+
+  <section class="login-screen" id="loginView">
+    <div class="login-hero">
+      <div class="brand-lockup">
+        <div class="brand-mark">DP</div>
+        <div>
+          <p class="eyebrow">Debt repayment control center</p>
+          <h1>Kelola pelunasan utang dengan tampilan yang bersih, cepat, dan fokus.</h1>
+        </div>
+      </div>
+      <div class="hero-copy">
+        <p>Login tunggal tanpa registrasi untuk memantau total utang, pembayaran, progres, riwayat transaksi, dan target bebas utang.</p>
+        <div class="feature-pills">
+          <span>Dashboard interaktif</span>
+          <span>Charts SVG responsif</span>
+          <span>LocalStorage persistence</span>
+          <span>Format Rupiah Indonesia</span>
+        </div>
+      </div>
+    </div>
+
+    <form class="login-card card" id="loginForm">
+      <div class="card-header compact">
+        <div>
+          <p class="eyebrow">Single-user login</p>
+          <h2>Masuk ke dashboard</h2>
+        </div>
+        <div class="status-chip success">Tersedia 1 akun</div>
+      </div>
+
+      <p class="login-hint" id="loginHint"></p>
+
+      <label>
+        <span>Username</span>
+        <input type="text" id="loginUsername" autocomplete="username" required>
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </label>
+
+      <button class="primary-btn" type="submit">Login</button>
+    </form>
+  </section>
+
+  <div class="app-shell hidden" id="appView">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-lockup sidebar-brand">
+          <div class="brand-mark">DP</div>
+          <div>
+            <p class="eyebrow">DebtPilot</p>
+            <h2>Repayment Dashboard</h2>
+          </div>
+        </div>
+        <button class="ghost-btn mobile-close" id="sidebarClose" type="button">Tutup</button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Navigasi utama">
+        <button class="nav-link active" type="button" data-panel="dashboard">Dashboard</button>
+        <button class="nav-link" type="button" data-panel="upload">Upload Bukti</button>
+        <button class="nav-link hidden" type="button" data-panel="transaksi">Transaksi (Admin)</button>
+        <button class="nav-link" type="button" data-panel="laporan">Laporan</button>
+        <button class="nav-link" type="button" data-panel="update-payment">Update Payment</button>
+        <button class="nav-link" type="button" data-panel="debt-details">Debt Details</button>
+        <button class="nav-link" type="button" data-panel="payment-history">Payment History</button>
+        <button class="nav-link" type="button" data-panel="settings">Settings</button>
+      </nav>
+
+      <div class="sidebar-footer card subtle-card">
+        <p class="eyebrow">Current user</p>
+        <strong id="sidebarUsername">-</strong>
+        <p id="sidebarUserMeta"></p>
+        <button class="ghost-btn" id="logoutButton" type="button">Logout</button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="main-content">
+      <header class="topbar card">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-menu" id="sidebarOpen" type="button">☰</button>
+          <div>
+            <p class="eyebrow">Personal debt overview</p>
+            <h1>Dashboard pelunasan</h1>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-stat">
+            <span>Target bulanan</span>
+            <strong id="topbarMonthlyTarget">-</strong>
+          </div>
+          <div class="topbar-stat">
+            <span>Target bebas utang</span>
+            <strong id="topbarDebtFreeTarget">-</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel active" id="dashboardPanel">
+        <div class="hero card accent-card">
+          <div>
+            <p class="eyebrow">Ringkasan utama</p>
+            <h2 id="heroTotalDebt">-</h2>
+            <p class="hero-subtitle" id="heroSubtitle">-</p>
+          </div>
+          <div class="hero-progress">
+            <div class="progress-head">
+              <span>Progress pembayaran</span>
+              <strong id="heroProgressLabel">-</strong>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="heroProgressFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="insightsContainer"></div>
+
+        <div class="metrics-grid" id="summaryCards"></div>
+
+        <div class="dashboard-grid">
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Paid vs Remaining</p>
+                <h3>Donut chart</h3>
+              </div>
+            </div>
+            <div class="chart-frame" id="donutChart"></div>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Payment history</p>
+                <h3>Line chart</h3>
+              </div>
+            </div>
+            <div class="chart-frame" id="lineChart"></div>
+          </article>
+
+          <article class="card chart-card chart-wide">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Per platform</p>
+                <h3>Bar chart sisa utang</h3>
+              </div>
+            </div>
+            <div class="chart-frame" id="barChart"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="update-paymentPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Update Payment</p>
+            <h2>Catat pembayaran baru atau lunasi platform tertentu</h2>
+          </div>
+          <div class="status-chip" id="selectedPlatformStatus">-</div>
+        </div>
+
+        <div class="two-column-grid">
+          <form class="card form-card" id="paymentForm">
+            <div class="card-header compact">
+              <div>
+                <h3 id="paymentFormTitle">Tambah pembayaran</h3>
+                <p>Isi detail transaksi, atau gunakan tombol cepat untuk mempercepat input.</p>
+              </div>
+            </div>
+
+            <input type="hidden" id="paymentId">
+
+            <label>
+              <span>Platform</span>
+              <select id="paymentPlatform" required></select>
+            </label>
+
+            <label>
+              <span>Payment amount</span>
+              <input type="number" id="paymentAmount" min="1" step="1000" placeholder="Contoh: 500000" required>
+            </label>
+
+            <label>
+              <span>Date</span>
+              <input type="date" id="paymentDate" required>
+            </label>
+
+            <label>
+              <span>Method</span>
+              <select id="paymentMethod" required>
+                <option value="Transfer bank">Transfer bank</option>
+                <option value="E-wallet">E-wallet</option>
+                <option value="Cash">Cash</option>
+                <option value="Auto-debit">Auto-debit</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Notes</span>
+              <textarea id="paymentNotes" rows="4" placeholder="Tambahkan catatan, bukti transfer, atau detail transaksi."></textarea>
+            </label>
+
+            <div class="action-row">
+              <button class="primary-btn" type="submit" id="paymentSubmitButton">Simpan pembayaran</button>
+              <button class="ghost-btn hidden" type="button" id="cancelEditButton">Batal edit</button>
+            </div>
+          </form>
+
+          <div class="card helper-card">
+            <div class="card-header compact">
+              <div>
+                <h3>Quick actions</h3>
+                <p>Gunakan pilihan cepat untuk mempercepat input transaksi.</p>
+              </div>
+            </div>
+
+            <div class="quick-amounts" id="quickAmountButtons"></div>
+
+            <div class="reminder-box">
+              <p class="eyebrow">Sisa pada platform terpilih</p>
+              <strong id="platformRemainingLabel">-</strong>
+              <p id="platformRemainingMeta">-</p>
+            </div>
+
+            <button class="secondary-btn full-width" type="button" id="payoffButton">Pay-off platform</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="debt-detailsPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Debt Details</p>
+            <h2>Rincian per platform</h2>
+          </div>
+        </div>
+        <div class="card table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Platform</th>
+                  <th>Initial debt</th>
+                  <th>Paid</th>
+                  <th>Remaining</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Due date</th>
+                  <th>Progress</th>
+                </tr>
+              </thead>
+              <tbody id="debtTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="payment-historyPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Payment History</p>
+            <h2>Filter, cari, edit, dan hapus transaksi</h2>
+          </div>
+        </div>
+
+        <div class="card filter-card">
+          <div class="filter-grid">
+            <label>
+              <span>Search</span>
+              <input type="search" id="historySearch" placeholder="Cari platform, metode, atau catatan">
+            </label>
+            <label>
+              <span>Platform</span>
+              <select id="historyPlatformFilter"></select>
+            </label>
+            <label>
+              <span>Method</span>
+              <select id="historyMethodFilter">
+                <option value="all">All methods</option>
+                <option value="Transfer bank">Transfer bank</option>
+                <option value="E-wallet">E-wallet</option>
+                <option value="Cash">Cash</option>
+                <option value="Auto-debit">Auto-debit</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort by</span>
+              <select id="historySortFilter">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="amount-desc">Largest amount</option>
+                <option value="amount-asc">Smallest amount</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-wrap history-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Platform</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="uploadPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Upload Bukti Pembayaran</p>
+            <h2>Unggah gambar dan nominal transfer</h2>
+          </div>
+        </div>
+
+        <div class="card form-card">
+          <div class="card-header compact">
+            <div>
+              <h3>Upload Bukti Bayar</h3>
+              <p>Unggah screenshot/foto bukti transfer dan masukkan nominalnya.</p>
+            </div>
+          </div>
+
+          <form id="uploadForm">
+            <label>
+              <span>Pilih Gambar Bukti</span>
+              <input type="file" id="uploadImage" accept="image/*" required>
+              <div id="imagePreview" class="image-preview hidden"></div>
+            </label>
+
+            <label>
+              <span>Nominal Transfer (Required)</span>
+              <input type="number" id="uploadNominal" min="1" step="1000" placeholder="Contoh: 500000" required>
+            </label>
+
+            <div class="action-row">
+              <button class="primary-btn" type="submit">Upload Bukti</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card table-card">
+          <div class="card-header compact">
+            <p class="eyebrow">Upload Terakhir</p>
+            <h3>Histori upload</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Gambar</th>
+                  <th>Nominal</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="uploadHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="transaksiPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Transaksi Pending</p>
+            <h2>Approve dan kategorisasi upload bukti pembayaran</h2>
+          </div>
+        </div>
+
+        <div id="transaksiContainer" class="transaksi-grid"></div>
+      </section>
+
+      <section class="panel" id="laporanPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Laporan Pembayaran</p>
+            <h2>Rekap transaksi pembayaran per platform</h2>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Platform</th>
+                  <th>Nota</th>
+                  <th>Nominal</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="laporanTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="settingsPanel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h2>Ubah kredensial, target, dan data aplikasi</h2>
+          </div>
+        </div>
+
+        <div class="two-column-grid settings-grid">
+          <form class="card form-card" id="settingsForm">
+            <div class="card-header compact">
+              <div>
+                <h3>Account & target</h3>
+                <p>Perbarui username, password, target bulanan, dan tanggal bebas utang.</p>
+              </div>
+            </div>
+
+            <label>
+              <span>Current username</span>
+              <input type="text" id="settingsUsername" required>
+            </label>
+
+            <label>
+              <span>Current password</span>
+              <input type="password" id="settingsPassword" required>
+            </label>
+
+            <label>
+              <span>Monthly payment target</span>
+              <input type="number" id="settingsMonthlyTarget" min="0" step="1000" required>
+            </label>
+
+            <label>
+              <span>Debt-free target date</span>
+              <input type="date" id="settingsTargetDate" required>
+            </label>
+
+            <div class="action-row">
+              <button class="primary-btn" type="submit">Simpan setting</button>
+            </div>
+          </form>
+
+          <div class="card helper-card">
+            <div class="card-header compact">
+              <div>
+                <h3>Reset data</h3>
+                <p>Kembalikan seluruh data ke kondisi awal demo.</p>
+              </div>
+            </div>
+
+            <div class="reminder-box warning">
+              <p class="eyebrow">Warning</p>
+              <strong>Reset akan menghapus semua transaksi, perubahan kredensial, dan target yang tersimpan.</strong>
+              <p>Aksi ini cocok jika Anda ingin memulai ulang data dashboard.</p>
+            </div>
+
+            <button class="danger-btn full-width" type="button" id="resetDataButton">Reset data</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="paymentModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card card">
+      <div class="card-header compact">
+        <div>
+          <p class="eyebrow">Edit payment</p>
+          <h3>Ubah transaksi</h3>
+        </div>
+        <button class="ghost-btn" type="button" data-close-modal>Tutup</button>
+      </div>
+
+      <form id="editPaymentForm" class="modal-form">
+        <input type="hidden" id="editPaymentId">
+        <label>
+          <span>Platform</span>
+          <select id="editPaymentPlatform" required></select>
+        </label>
+        <label>
+          <span>Amount</span>
+          <input type="number" id="editPaymentAmount" min="1" step="1000" required>
+        </label>
+        <label>
+          <span>Date</span>
+          <input type="date" id="editPaymentDate" required>
+        </label>
+        <label>
+          <span>Method</span>
+          <select id="editPaymentMethod" required>
+            <option value="Transfer bank">Transfer bank</option>
+            <option value="E-wallet">E-wallet</option>
+            <option value="Cash">Cash</option>
+            <option value="Auto-debit">Auto-debit</option>
+          </select>
+        </label>
+        <label>
+          <span>Notes</span>
+          <textarea id="editPaymentNotes" rows="4"></textarea>
+        </label>
+        <div class="action-row">
+          <button class="primary-btn" type="submit">Simpan perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-zone" id="toastZone" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
