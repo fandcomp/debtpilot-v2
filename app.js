@@ -321,6 +321,7 @@ const els = {
   settingsPassword: document.getElementById('settingsPassword'),
   settingsMonthlyTarget: document.getElementById('settingsMonthlyTarget'),
   settingsTargetDate: document.getElementById('settingsTargetDate'),
+  setDebtForm: document.getElementById('setDebtForm'),
   resetDataButton: document.getElementById('resetDataButton'),
   paymentModal: document.getElementById('paymentModal'),
   editPaymentForm: document.getElementById('editPaymentForm'),
@@ -802,6 +803,7 @@ function renderAll() {
   renderDebtTable();
   renderHistoryTable();
   renderSettingsForm();
+  renderSetDebtForm();
 
   // New panels
   renderUploadHistory();
@@ -1063,6 +1065,66 @@ function handleLogout() {
 }
 
 // ========== DATA RESET ==========
+// ========== FORM: SET DEBT ==========
+function renderSetDebtForm() {
+  const container = document.getElementById('debtInputs');
+  if (!container) return;
+
+  const platforms = ['Bank Jago', 'Blu by BCA', 'SPay', 'GoPay', 'SeaBank', 'Arsanta'];
+  const debtMap = new Map(state.debts.map(d => [d.platform, d]));
+
+  container.innerHTML = platforms.map(platform => {
+    const debt = debtMap.get(platform);
+    const amount = debt?.initialDebt || 0;
+    const dueDate = debt?.dueDate || '';
+    return `
+    <label>
+      <span>${platform}</span>
+      <div style="display: grid; grid-template-columns: 1fr 100px; gap: 8px;">
+        <input type="number" class="debt-input" data-platform="${platform}" min="0" step="100000" value="${amount}" placeholder="Rp0">
+        <input type="date" class="debt-date" data-platform="${platform}" value="${dueDate}">
+      </div>
+    </label>
+  `;
+  }).join('');
+}
+
+function handleSetDebtSubmit(event) {
+  event.preventDefault();
+  const debts = [];
+  const platforms = ['Bank Jago', 'Blu by BCA', 'SPay', 'GoPay', 'SeaBank', 'Arsanta'];
+
+  platforms.forEach((platform, index) => {
+    const input = document.querySelector(`.debt-input[data-platform="${platform}"]`);
+    const dateInput = document.querySelector(`.debt-date[data-platform="${platform}"]`);
+    const amount = Math.max(0, Number(input?.value) || 0);
+    const dueDate = dateInput?.value || '';
+
+    if (amount > 0 && dueDate) {
+      debts.push({
+        platform,
+        initialDebt: amount,
+        dueDate,
+        priority: index + 1,
+      });
+    }
+  });
+
+  if (debts.length === 0) {
+    showToast('Data tidak lengkap', 'Minimal ada satu utang dengan tanggal jatuh tempo', 'warning');
+    return;
+  }
+
+  state.debts = debts;
+  state.payments = []; // Reset payments juga saat set utang baru
+  saveState();
+  renderAll();
+  showToast('Utang berhasil disimpan', `${debts.length} platform telah ditambahkan.`, 'success');
+
+  // Scroll ke dashboard
+  switchPanel('dashboardPanel');
+}
+
 function handleResetData() {
   if (!window.confirm('Reset seluruh data ke kondisi awal?')) return;
   const fresh = structuredClone(DEFAULT_STATE);
@@ -1075,7 +1137,7 @@ function handleResetData() {
   renderLoginHint();
   renderAll();
   showLogin();
-  showToast('Data di-reset', 'Dashboard kembali ke data demo awal.', 'success');
+  showToast('Data di-reset', 'Dashboard kembali ke kondisi awal kosong.', 'success');
 }
 
 // ========== UPLOAD & TRANSAKSI HANDLERS ==========
@@ -1251,6 +1313,7 @@ function attachEvents() {
 
   els.paymentForm.addEventListener('submit', handlePaymentSubmit);
   els.settingsForm.addEventListener('submit', handleSettingsSubmit);
+  els.setDebtForm.addEventListener('submit', handleSetDebtSubmit);
   els.editPaymentForm.addEventListener('submit', handleEditPaymentSubmit);
   els.resetDataButton.addEventListener('click', handleResetData);
   els.logoutButton.addEventListener('click', handleLogout);

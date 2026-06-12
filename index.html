@@ -461,18 +461,33 @@
             </div>
           </form>
 
+          <form class="card form-card" id="setDebtForm">
+            <div class="card-header compact">
+              <div>
+                <h3>Set nilai utang awal</h3>
+                <p>Atur jumlah utang untuk setiap platform. Nominal akan dimulai dari 0.</p>
+              </div>
+            </div>
+
+            <div id="debtInputs"></div>
+
+            <div class="action-row">
+              <button class="primary-btn" type="submit">Simpan nilai utang</button>
+            </div>
+          </form>
+
           <div class="card helper-card">
             <div class="card-header compact">
               <div>
                 <h3>Reset data</h3>
-                <p>Kembalikan seluruh data ke kondisi awal demo.</p>
+                <p>Kembalikan seluruh data ke kondisi awal kosong.</p>
               </div>
             </div>
 
             <div class="reminder-box warning">
               <p class="eyebrow">Warning</p>
-              <strong>Reset akan menghapus semua transaksi, perubahan kredensial, dan target yang tersimpan.</strong>
-              <p>Aksi ini cocok jika Anda ingin memulai ulang data dashboard.</p>
+              <strong>Reset akan menghapus semua transaksi, utang, dan pembayaran yang tersimpan.</strong>
+              <p>Aksi ini cocok jika Anda ingin memulai ulang dari awal.</p>
             </div>
 
             <button class="danger-btn full-width" type="button" id="resetDataButton">Reset data</button>
