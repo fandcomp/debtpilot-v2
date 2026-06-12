@@ -198,7 +198,7 @@ const Calc = {
 // ========== STATE MANAGEMENT ==========
 const state = loadState();
 let activePanel = 'dashboard';
-let historyFilters = { search: '', platform: 'all', method: 'all', sort: 'newest' };
+let historyFilters = { search: '', platform: 'all', sort: 'newest' };
 let editPaymentId = null;
 
 function loadState() {
@@ -300,7 +300,6 @@ const els = {
   paymentPlatform: document.getElementById('paymentPlatform'),
   paymentAmount: document.getElementById('paymentAmount'),
   paymentDate: document.getElementById('paymentDate'),
-  paymentMethod: document.getElementById('paymentMethod'),
   paymentNotes: document.getElementById('paymentNotes'),
   paymentSubmitButton: document.getElementById('paymentSubmitButton'),
   paymentFormTitle: document.getElementById('paymentFormTitle'),
@@ -313,7 +312,6 @@ const els = {
   debtTableBody: document.getElementById('debtTableBody'),
   historySearch: document.getElementById('historySearch'),
   historyPlatformFilter: document.getElementById('historyPlatformFilter'),
-  historyMethodFilter: document.getElementById('historyMethodFilter'),
   historySortFilter: document.getElementById('historySortFilter'),
   historyTableBody: document.getElementById('historyTableBody'),
   settingsForm: document.getElementById('settingsForm'),
@@ -329,7 +327,6 @@ const els = {
   editPaymentPlatform: document.getElementById('editPaymentPlatform'),
   editPaymentAmount: document.getElementById('editPaymentAmount'),
   editPaymentDate: document.getElementById('editPaymentDate'),
-  editPaymentMethod: document.getElementById('editPaymentMethod'),
   editPaymentNotes: document.getElementById('editPaymentNotes'),
   toastZone: document.getElementById('toastZone'),
   insightsContainer: document.getElementById('insightsContainer'),
@@ -735,7 +732,6 @@ function renderHistoryTable() {
       <td>${Format.date(payment.date)}</td>
       <td><strong>${payment.platform}</strong></td>
       <td>${Format.money(payment.amount)}</td>
-      <td>${payment.method}</td>
       <td>${payment.notes ? payment.notes : '<span class="muted-cell">-</span>'}</td>
       <td>
         <div class="table-actions">
@@ -746,7 +742,7 @@ function renderHistoryTable() {
     </tr>
   `).join('') || `
     <tr>
-      <td colspan="6">Tidak ada transaksi yang cocok dengan filter saat ini.</td>
+      <td colspan="5">Tidak ada transaksi yang cocok dengan filter saat ini.</td>
     </tr>
   `;
 }
@@ -754,10 +750,9 @@ function renderHistoryTable() {
 function applyHistoryFilters() {
   const search = historyFilters.search.trim().toLowerCase();
   let rows = [...state.payments].filter((payment) => {
-    const matchesSearch = !search || [payment.platform, payment.method, payment.notes || '', payment.date].some((field) => field.toLowerCase().includes(search));
+    const matchesSearch = !search || [payment.platform, payment.notes || '', payment.date].some((field) => field.toLowerCase().includes(search));
     const matchesPlatform = historyFilters.platform === 'all' || payment.platform === historyFilters.platform;
-    const matchesMethod = historyFilters.method === 'all' || payment.method === historyFilters.method;
-    return matchesSearch && matchesPlatform && matchesMethod;
+    return matchesSearch && matchesPlatform;
   });
 
   rows.sort((left, right) => {
@@ -887,11 +882,10 @@ function handlePaymentSubmit(event) {
     platform: els.paymentPlatform.value,
     amount: Number(els.paymentAmount.value),
     date: els.paymentDate.value,
-    method: els.paymentMethod.value,
     notes: els.paymentNotes.value.trim(),
   };
 
-  if (!payload.platform || !payload.amount || !payload.date || !payload.method) {
+  if (!payload.platform || !payload.amount || !payload.date) {
     showToast('Input belum lengkap', 'Pastikan semua field wajib terisi.', 'danger');
     return;
   }
@@ -968,7 +962,6 @@ function openPaymentModal(payment) {
   els.editPaymentPlatform.value = payment.platform;
   els.editPaymentAmount.value = payment.amount;
   els.editPaymentDate.value = payment.date;
-  els.editPaymentMethod.value = payment.method;
   els.editPaymentNotes.value = payment.notes || '';
   els.paymentModal.classList.remove('hidden');
   els.paymentModal.setAttribute('aria-hidden', 'false');
@@ -986,7 +979,6 @@ function handleEditPaymentSubmit(event) {
     platform: els.editPaymentPlatform.value,
     amount: Number(els.editPaymentAmount.value),
     date: els.editPaymentDate.value,
-    method: els.editPaymentMethod.value,
     notes: els.editPaymentNotes.value.trim(),
   };
 
@@ -1035,7 +1027,6 @@ function handleHistoryFilterChange() {
   historyFilters = {
     search: els.historySearch.value,
     platform: els.historyPlatformFilter.value,
-    method: els.historyMethodFilter.value,
     sort: els.historySortFilter.value,
   };
   renderHistoryTable();
@@ -1328,7 +1319,6 @@ function attachEvents() {
   els.historyTableBody.addEventListener('click', handleHistoryAction);
   els.historySearch.addEventListener('input', handleHistoryFilterChange);
   els.historyPlatformFilter.addEventListener('change', handleHistoryFilterChange);
-  els.historyMethodFilter.addEventListener('change', handleHistoryFilterChange);
   els.historySortFilter.addEventListener('change', handleHistoryFilterChange);
   els.paymentModal.addEventListener('click', handleModalClick);
   document.addEventListener('keydown', (event) => {

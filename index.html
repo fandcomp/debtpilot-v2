@@ -198,16 +198,6 @@
             </label>
 
             <label>
-              <span>Method</span>
-              <select id="paymentMethod" required>
-                <option value="Transfer bank">Transfer bank</option>
-                <option value="E-wallet">E-wallet</option>
-                <option value="Cash">Cash</option>
-                <option value="Auto-debit">Auto-debit</option>
-              </select>
-            </label>
-
-            <label>
               <span>Notes</span>
               <textarea id="paymentNotes" rows="4" placeholder="Tambahkan catatan, bukti transfer, atau detail transaksi."></textarea>
             </label>
@@ -286,16 +276,6 @@
               <select id="historyPlatformFilter"></select>
             </label>
             <label>
-              <span>Method</span>
-              <select id="historyMethodFilter">
-                <option value="all">All methods</option>
-                <option value="Transfer bank">Transfer bank</option>
-                <option value="E-wallet">E-wallet</option>
-                <option value="Cash">Cash</option>
-                <option value="Auto-debit">Auto-debit</option>
-              </select>
-            </label>
-            <label>
               <span>Sort by</span>
               <select id="historySortFilter">
                 <option value="newest">Newest first</option>
@@ -315,7 +295,6 @@
                   <th>Date</th>
                   <th>Platform</th>
                   <th>Amount</th>
-                  <th>Method</th>
                   <th>Notes</th>
                   <th>Actions</th>
                 </tr>
@@ -521,15 +500,6 @@
         <label>
           <span>Date</span>
           <input type="date" id="editPaymentDate" required>
-        </label>
-        <label>
-          <span>Method</span>
-          <select id="editPaymentMethod" required>
-            <option value="Transfer bank">Transfer bank</option>
-            <option value="E-wallet">E-wallet</option>
-            <option value="Cash">Cash</option>
-            <option value="Auto-debit">Auto-debit</option>
-          </select>
         </label>
         <label>
           <span>Notes</span>
