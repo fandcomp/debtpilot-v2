@@ -2,6 +2,13 @@
 const STORAGE_KEY = 'debtpilot-state-v1';
 const SESSION_KEY = 'debtpilot-session-v1';
 
+// Supabase Configuration
+const SUPABASE_URL = 'https://vrpfkpqmzfcehskczupd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZycGZrcHFtemZjZWhza2N6dXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkzNzE2MDAsImV4cCI6MTczNTA4MTYwMH0.0qPxM7nXqmWnH5fJDpJQdqmjMjF8vUHhR7OGdLvMVpE';
+
+let supabase = null;
+let dataChannel = null;
+
 const PLATFORM_ORDER = ['Bank Jago', 'Blu by BCA', 'SPay', 'GoPay', 'SeaBank', 'Arsanta'];
 const QUICK_AMOUNTS = [100000, 250000, 500000, 1000000];
 
@@ -66,6 +73,107 @@ const Utils = {
     return Math.round(diff / 86400000);
   },
 };
+
+// ========== SUPABASE FUNCTIONS ==========
+async function initSupabase() {
+  if (!window.supabase) {
+    console.warn('Supabase library not loaded');
+    return false;
+  }
+
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase initialized');
+    return true;
+  } catch (error) {
+    console.error('Supabase init error:', error);
+    return false;
+  }
+}
+
+async function saveStateToSupabase(userId = 'default-user') {
+  if (!supabase) return;
+
+  try {
+    const { error } = await supabase
+      .from('app_state')
+      .upsert(
+        {
+          user_id: userId,
+          state: state,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      );
+
+    if (error) {
+      console.error('Supabase save error:', error);
+    }
+  } catch (error) {
+    console.error('Supabase save exception:', error);
+  }
+}
+
+async function loadStateFromSupabase(userId = 'default-user') {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('app_state')
+      .select('state, updated_at')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Supabase load error:', error);
+      return null;
+    }
+
+    if (data) {
+      console.log('✅ State loaded from Supabase');
+      return data.state;
+    }
+  } catch (error) {
+    console.error('Supabase load exception:', error);
+  }
+
+  return null;
+}
+
+async function setupRealtimeSync(userId = 'default-user') {
+  if (!supabase) return;
+
+  try {
+    dataChannel = supabase
+      .channel(`state:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'app_state',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('📡 Real-time update received');
+          const remoteState = payload.new.state;
+          const localTs = localStorage.getItem(STORAGE_KEY + '-ts') || 0;
+          const remoteTs = new Date(payload.new.updated_at).getTime();
+
+          if (remoteTs > localTs) {
+            state = remoteState;
+            renderAll();
+            showToast('Data disinkronkan', 'Data diperbarui dari device lain.', 'success');
+          }
+        }
+      )
+      .subscribe();
+
+    console.log('✅ Real-time sync setup complete');
+  } catch (error) {
+    console.error('Real-time sync error:', error);
+  }
+}
 
 // ========== BUSINESS LOGIC / CALCULATIONS ==========
 const Calc = {
@@ -196,13 +304,22 @@ const Calc = {
 };
 
 // ========== STATE MANAGEMENT ==========
-const state = loadState();
+let state = structuredClone(DEFAULT_STATE);
 let activePanel = 'dashboard';
 let historyFilters = { search: '', platform: 'all', sort: 'newest' };
 let editPaymentId = null;
 
-function loadState() {
+async function loadState() {
   try {
+    // Try loading from Supabase first
+    if (supabase) {
+      const remoteState = await loadStateFromSupabase('default-user');
+      if (remoteState) {
+        return remoteState;
+      }
+    }
+
+    // Fallback to localStorage
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
@@ -223,6 +340,11 @@ function mergeState(base, incoming) {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY + '-ts', Date.now().toString());
+  // Save to Supabase
+  if (supabase) {
+    saveStateToSupabase('default-user');
+  }
 }
 
 // ========== AUTHENTICATION ==========
@@ -1483,7 +1605,21 @@ function attachEvents() {
 }
 
 // ========== INITIALIZATION ==========
-function init() {
+async function init() {
+  // Initialize Supabase
+  await initSupabase();
+
+  // Load state from Supabase or localStorage
+  const loadedState = await loadState();
+  if (loadedState) {
+    state = loadedState;
+  }
+
+  // Setup real-time sync
+  if (supabase) {
+    setupRealtimeSync('default-user');
+  }
+
   // Restore current user from session
   const storedUser = sessionStorage.getItem('currentUser');
   if (storedUser) {
@@ -1498,13 +1634,9 @@ function init() {
   if (isAuthenticated()) {
     showApp();
     renderRoleBasedUI();
+    renderAll();
   } else {
     showLogin();
-  }
-
-  if (!state.payments.length) {
-    state.payments = structuredClone(DEFAULT_STATE.payments);
-    saveState();
   }
 }
 
