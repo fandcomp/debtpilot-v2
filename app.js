@@ -10,7 +10,7 @@ const SESSION_KEY = 'debtpilot-session-v1';
 const SUPABASE_URL = 'https://wubbbjqqdowuqxjpmqpt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1VZ6iZWdGiJX_jQCELROIA_kKPuZ9dh';
 
-let supabase = null;
+let supabaseClient = null;
 let dataChannel = null;
 
 const PLATFORM_ORDER = ['Bank Jago', 'Blu by BCA', 'SPay', 'GoPay', 'SeaBank', 'Arsanta'];
@@ -80,7 +80,7 @@ const Utils = {
 
 // ========== SUPABASE FUNCTIONS ==========
 async function testSupabaseConnection() {
-  if (!supabase) {
+  if (!supabaseClient) {
     console.error('Supabase not initialized');
     return false;
   }
@@ -89,7 +89,7 @@ async function testSupabaseConnection() {
     console.log('🔍 Testing Supabase connection...');
 
     // Test reading from app_state table
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('app_state')
       .select('*')
       .limit(1);
@@ -119,7 +119,7 @@ async function initSupabase() {
     console.log(`   URL: ${SUPABASE_URL}`);
     console.log(`   Key: ${SUPABASE_KEY.substring(0, 20)}...`);
 
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✅ Supabase client created');
 
     // Test connection
@@ -139,10 +139,10 @@ async function initSupabase() {
 }
 
 async function saveStateToSupabase(userId = 'default-user') {
-  if (!supabase) return;
+  if (!supabaseClient) return;
 
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('app_state')
       .upsert(
         {
@@ -162,10 +162,10 @@ async function saveStateToSupabase(userId = 'default-user') {
 }
 
 async function loadStateFromSupabase(userId = 'default-user') {
-  if (!supabase) return null;
+  if (!supabaseClient) return null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('app_state')
       .select('state, updated_at')
       .eq('user_id', userId)
@@ -188,10 +188,10 @@ async function loadStateFromSupabase(userId = 'default-user') {
 }
 
 async function setupRealtimeSync(userId = 'default-user') {
-  if (!supabase) return;
+  if (!supabaseClient) return;
 
   try {
-    dataChannel = supabase
+    dataChannel = supabaseClient
       .channel(`state:${userId}`)
       .on(
         'postgres_changes',
@@ -359,7 +359,7 @@ let editPaymentId = null;
 async function loadState() {
   try {
     // Try loading from Supabase first
-    if (supabase) {
+    if (supabaseClient) {
       const remoteState = await loadStateFromSupabase('default-user');
       if (remoteState) {
         return remoteState;
@@ -389,7 +389,7 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(STORAGE_KEY + '-ts', Date.now().toString());
   // Save to Supabase
-  if (supabase) {
+  if (supabaseClient) {
     saveStateToSupabase('default-user');
   }
 }
@@ -1500,7 +1500,7 @@ function handleImageSelect(event) {
 }
 
 async function uploadImageToSupabase(fileName, fileData) {
-  if (!supabase) {
+  if (!supabaseClient) {
     console.warn('⚠️ Supabase not connected - storing as base64');
     return null; // Return null, will store as base64
   }
@@ -1514,7 +1514,7 @@ async function uploadImageToSupabase(fileName, fileData) {
 
     // Upload to storage
     const filePath = `${new Date().getTime()}-${fileName}`;
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseClient.storage
       .from('payment-proofs')
       .upload(filePath, blob, { cacheControl: '3600' });
 
@@ -1524,7 +1524,7 @@ async function uploadImageToSupabase(fileName, fileData) {
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseClient.storage
       .from('payment-proofs')
       .getPublicUrl(filePath);
 
@@ -1572,7 +1572,7 @@ function handleUploadSubmit(event) {
   };
 
   // Try uploading to Supabase in background
-  if (supabase) {
+  if (supabaseClient) {
     uploadImageToSupabase(fileName, imageData).then(url => {
       if (url) {
         const uploadIndex = state.uploads.findIndex(u => u.id === uploadId);
@@ -1755,7 +1755,7 @@ async function init() {
     }
 
     // Setup real-time sync
-    if (supabase) {
+    if (supabaseClient) {
       setupRealtimeSync('default-user');
     }
 
@@ -1796,7 +1796,7 @@ if (document.readyState === 'loading') {
 // Type in console: testConnection()
 window.testConnection = async () => {
   console.log('🧪 Running connection test...');
-  if (!supabase) {
+  if (!supabaseClient) {
     console.error('Supabase not initialized. Run init() first.');
     return;
   }
