@@ -1354,17 +1354,33 @@ function handleHistoryFilterChange() {
 // ========== AUTHENTICATION & LOGOUT ==========
 function handleLogin(event) {
   event.preventDefault();
+  console.log('🔐 Login attempt...');
+
   const username = els.loginUsername.value.trim();
   const password = els.loginPassword.value;
 
+  console.log(`   Username: ${username}`);
+  console.log(`   Password: ${password.length} chars`);
+
+  if (!username || !password) {
+    console.warn('   Missing username or password');
+    showToast('Input tidak lengkap', 'Masukkan username dan password.', 'danger');
+    return;
+  }
+
   const user = validateLogin(username, password);
   if (user) {
+    console.log(`✅ Login success: ${user.name} (${user.role})`);
     setAuthenticated(true, user);
     showApp();
+    renderAll();
     showToast('Login berhasil', `Selamat datang, ${user.name}!`, 'success');
     renderRoleBasedUI();
     return;
   }
+
+  console.error(`❌ Login failed: invalid credentials`);
+  console.log(`   Available users: ${USERS_DB.map(u => u.username).join(', ')}`);
   showToast('Login gagal', 'Username atau password tidak sesuai.', 'danger');
 }
 
@@ -1455,13 +1471,17 @@ function handleImageSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  console.log(`📷 Image selected: ${file.name} (${Math.round(file.size / 1024)}KB)`);
+
   // Validate file
   if (!file.type.startsWith('image/')) {
+    console.warn('❌ Invalid file type:', file.type);
     showToast('Format tidak valid', 'Pilih file gambar (jpg, png, dll)', 'danger');
     return;
   }
 
   if (file.size > 5 * 1024 * 1024) {
+    console.warn('❌ File too large:', file.size);
     showToast('File terlalu besar', 'Maksimal 5MB', 'danger');
     return;
   }
@@ -1469,42 +1489,101 @@ function handleImageSelect(event) {
   // Preview image
   const reader = new FileReader();
   reader.onload = (e) => {
+    console.log('✅ Image preview ready');
     els.imagePreview.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-width:200px;height:auto;border-radius:8px;">`;
     els.imagePreview.classList.remove('hidden');
-    // Store temporarily
+    // Store temporarily as base64
     els.uploadForm.dataset.imageData = e.target.result;
+    els.uploadForm.dataset.fileName = file.name;
   };
   reader.readAsDataURL(file);
 }
 
+async function uploadImageToSupabase(fileName, fileData) {
+  if (!supabase) {
+    console.warn('⚠️ Supabase not connected - storing as base64');
+    return null; // Return null, will store as base64
+  }
+
+  try {
+    console.log(`📤 Uploading to Supabase: ${fileName}`);
+
+    // Convert base64 to blob
+    const response = await fetch(fileData);
+    const blob = await response.blob();
+
+    // Upload to storage
+    const filePath = `${new Date().getTime()}-${fileName}`;
+    const { data, error } = await supabase.storage
+      .from('payment-proofs')
+      .upload(filePath, blob, { cacheControl: '3600' });
+
+    if (error) {
+      console.error('❌ Supabase upload error:', error);
+      return null;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('payment-proofs')
+      .getPublicUrl(filePath);
+
+    console.log('✅ Image uploaded to Supabase:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('❌ Upload exception:', error);
+    return null;
+  }
+}
+
 function handleUploadSubmit(event) {
   event.preventDefault();
+  console.log('📤 Upload submit...');
 
   const nominal = Number(els.uploadNominal.value);
   const imageData = els.uploadForm.dataset.imageData;
+  const fileName = els.uploadForm.dataset.fileName || 'proof.jpg';
   const user = getCurrentUser();
 
   if (!nominal || nominal <= 0) {
+    console.warn('❌ Invalid nominal');
     showToast('Nominal tidak valid', 'Masukkan nominal yang lebih besar dari 0', 'danger');
     return;
   }
 
   if (!imageData) {
+    console.warn('❌ No image selected');
     showToast('Gambar tidak ada', 'Pilih gambar bukti pembayaran', 'danger');
     return;
   }
 
+  const uploadId = Utils.uniqueId('upload');
   const upload = {
-    id: Utils.uniqueId('upload'),
+    id: uploadId,
     userId: user.id,
     username: user.name,
-    imageThumbnail: imageData, // In production, compress here
+    imageThumbnail: imageData, // Always store base64 as fallback
+    imageUrl: null, // Will be filled if Supabase succeeds
     nominal: Math.round(nominal),
     status: 'pending',
     uploadedAt: new Date().toISOString(),
     approvedBy: null,
     approvedAt: null
   };
+
+  // Try uploading to Supabase in background
+  if (supabase) {
+    uploadImageToSupabase(fileName, imageData).then(url => {
+      if (url) {
+        const uploadIndex = state.uploads.findIndex(u => u.id === uploadId);
+        if (uploadIndex >= 0) {
+          state.uploads[uploadIndex].imageUrl = url;
+          saveState();
+          console.log('✅ Image URL saved to state');
+        }
+      }
+    });
+  }
 
   state.uploads.push(upload);
   saveState();
@@ -1513,8 +1592,10 @@ function handleUploadSubmit(event) {
   els.uploadForm.reset();
   els.imagePreview.classList.add('hidden');
   els.uploadForm.removeAttribute('data-imageData');
+  els.uploadForm.removeAttribute('data-fileName');
   renderUploadHistory();
 
+  console.log('✅ Upload recorded locally');
   showToast('Upload berhasil', 'Bukti pembayaran telah diunggah. Menunggu persetujuan admin.', 'success');
 }
 
@@ -1553,14 +1634,17 @@ function handleTransaksiSubmit(event) {
     approvedBy: getCurrentUser().name
   };
 
-  // Create laporan
+  // Create laporan - use Supabase URL if available, fallback to base64
+  const imageToUse = state.uploads[uploadIndex].imageUrl || state.uploads[uploadIndex].imageThumbnail;
   const laporan = {
     id: Utils.uniqueId('lap'),
     tanggal: new Date().toISOString().split('T')[0],
     platform: platform,
-    nota: state.uploads[uploadIndex].imageThumbnail,
+    nota: imageToUse,
     nominal: state.uploads[uploadIndex].nominal,
-    keterangan: keterangan
+    keterangan: keterangan,
+    uploadId: uploadId,
+    imageUrl: state.uploads[uploadIndex].imageUrl || null
   };
 
   state.transaksi.push(transaksi);
