@@ -242,7 +242,7 @@
             <div class="card-header compact">
               <div>
                 <h3 id="debtFormTitle">Tambah utang baru</h3>
-                <p id="debtFormDesc">Masukkan detail utang dengan platform, nominal tagihan, dan tenggat waktu.</p>
+                <p id="debtFormDesc">Masukkan platform, total tagihan, dan lama pembayaran. Angsuran per bulan dihitung otomatis.</p>
               </div>
             </div>
 
@@ -259,18 +259,8 @@
             </label>
 
             <label>
-              <span>Nominal angsuran per bulan</span>
-              <input type="number" id="debtInstallment" min="0" step="1000" placeholder="Rp0">
-            </label>
-
-            <label>
-              <span>Tenggat waktu</span>
-              <input type="date" id="debtDueDate" required>
-            </label>
-
-            <label>
-              <span>Prioritas (1=tertinggi)</span>
-              <input type="number" id="debtPriority" min="1" step="1" placeholder="1" value="1" required>
+              <span>Lama pembayaran (bulan)</span>
+              <input type="number" id="debtMonths" min="1" step="1" placeholder="12" value="12" required>
             </label>
 
             <div class="action-row">

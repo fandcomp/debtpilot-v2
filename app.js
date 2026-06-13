@@ -480,9 +480,7 @@ const els = {
   debtEditId: document.getElementById('debtEditId'),
   debtPlatform: document.getElementById('debtPlatform'),
   debtInitialDebt: document.getElementById('debtInitialDebt'),
-  debtInstallment: document.getElementById('debtInstallment'),
-  debtDueDate: document.getElementById('debtDueDate'),
-  debtPriority: document.getElementById('debtPriority'),
+  debtMonths: document.getElementById('debtMonths'),
   debtFormTitle: document.getElementById('debtFormTitle'),
   debtFormDesc: document.getElementById('debtFormDesc'),
   debtSubmitBtn: document.getElementById('debtSubmitBtn'),
@@ -1239,23 +1237,30 @@ function handleModalClick(event) {
 // ========== FORM: DEBT MANAGEMENT ==========
 function handleDebtSubmit(event) {
   event.preventDefault();
+  console.log('🔧 handleDebtSubmit called');
   const platform = els.debtPlatform.value.trim();
   const initialDebt = Math.max(0, Number(els.debtInitialDebt.value) || 0);
-  const installment = Math.max(0, Number(els.debtInstallment.value) || 0);
-  const dueDate = els.debtDueDate.value;
-  const priority = Math.max(1, Number(els.debtPriority.value) || 1);
+  const months = Math.max(1, Number(els.debtMonths.value) || 1);
   const editId = els.debtEditId.value;
 
-  if (!platform || !initialDebt || !dueDate) {
-    showToast('Data tidak lengkap', 'Platform, tagihan awal, dan tenggat wajib diisi.', 'danger');
+  if (!platform || !initialDebt) {
+    showToast('Data tidak lengkap', 'Platform dan total tagihan wajib diisi.', 'danger');
     return;
   }
+
+  // Calculate installment and due date
+  const installment = Math.round(initialDebt / months);
+  const dueDate = new Date();
+  dueDate.setMonth(dueDate.getMonth() + months);
+  const dueDateStr = dueDate.toISOString().split('T')[0];
+
+  console.log(`💰 Debt calculation: ${initialDebt} / ${months} months = ${installment}/month, due ${dueDateStr}`);
 
   if (editId) {
     // Edit existing debt
     const debtIndex = state.debts.findIndex(d => d.platform === editId);
     if (debtIndex >= 0) {
-      state.debts[debtIndex] = { platform, initialDebt, installment, dueDate, priority };
+      state.debts[debtIndex] = { platform, initialDebt, installment, dueDate: dueDateStr };
     }
     showToast('Utang diperbarui', `${platform} berhasil diubah.`, 'success');
   } else {
@@ -1265,7 +1270,7 @@ function handleDebtSubmit(event) {
       return;
     }
     // Add new debt
-    state.debts.push({ platform, initialDebt, installment, dueDate, priority });
+    state.debts.push({ platform, initialDebt, installment, dueDate: dueDateStr });
     showToast('Utang ditambahkan', `${platform} berhasil ditambahkan.`, 'success');
   }
 
@@ -1278,11 +1283,9 @@ function resetDebtForm() {
   els.debtEditId.value = '';
   els.debtPlatform.value = '';
   els.debtInitialDebt.value = '';
-  els.debtInstallment.value = '';
-  els.debtDueDate.value = '';
-  els.debtPriority.value = '1';
+  els.debtMonths.value = '12';
   els.debtFormTitle.textContent = 'Tambah utang baru';
-  els.debtFormDesc.textContent = 'Masukkan detail utang dengan platform, nominal tagihan, dan tenggat waktu.';
+  els.debtFormDesc.textContent = 'Masukkan platform, total tagihan, dan lama pembayaran. Angsuran per bulan dihitung otomatis.';
   els.debtSubmitBtn.textContent = 'Tambah utang';
   els.debtCancelBtn.classList.add('hidden');
 }
@@ -1298,12 +1301,16 @@ function handleDebtTableAction(event) {
     const debt = state.debts.find(d => d.platform === platform);
     if (!debt) return;
 
+    // Calculate months from dueDate
+    const today = new Date();
+    const dueDate = new Date(debt.dueDate);
+    const monthsDiff = (dueDate.getFullYear() - today.getFullYear()) * 12 + (dueDate.getMonth() - today.getMonth());
+    const months = Math.max(1, monthsDiff);
+
     els.debtEditId.value = platform;
     els.debtPlatform.value = debt.platform;
     els.debtInitialDebt.value = debt.initialDebt;
-    els.debtInstallment.value = debt.installment || '';
-    els.debtDueDate.value = debt.dueDate;
-    els.debtPriority.value = debt.priority;
+    els.debtMonths.value = months;
     els.debtFormTitle.textContent = 'Edit utang';
     els.debtFormDesc.textContent = `Mengubah data utang ${platform}.`;
     els.debtSubmitBtn.textContent = 'Simpan perubahan';
