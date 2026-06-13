@@ -34,17 +34,35 @@ CREATE POLICY "Allow public access to app_state"
 ALTER PUBLICATION supabase_realtime ADD TABLE app_state;
 ```
 
-## 3. Get Credentials
+## 3. Get Credentials dari Supabase
 
-Di Supabase Dashboard:
-1. Go to Settings → API
-2. Copy `Project URL` dan `anon public key`
-3. Update di `app.js` lines 5-6:
+Di Supabase Dashboard (https://app.supabase.com):
+
+1. **Login ke akun Anda**
+2. **Pilih project "debtpilot"**
+3. **Sidebar kiri → Settings → API**
+4. **Di halaman API, akan lihat:**
+   - `Project URL` (contoh: `https://vrpfkpqmzfcehskczupd.supabase.co`)
+   - `anon public key` (contoh: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`)
+
+5. **Copy kedua nilai tersebut**
+
+6. **Update di `app.js` (lines 5-6):**
 
 ```javascript
-const SUPABASE_URL = 'YOUR_PROJECT_URL';
-const SUPABASE_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://YOUR_PROJECT_NAME.supabase.co';  // Dari "Project URL"
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIs...';               // Dari "anon public key"
 ```
+
+### ⚠️ PENTING: Jangan Bingung dengan Secret Key
+
+Di halaman API, ada 3 key:
+- `Project URL` → Gunakan ini untuk SUPABASE_URL ✅
+- `anon public key` → Gunakan ini untuk SUPABASE_KEY ✅
+- `service_role secret key` → JANGAN gunakan di frontend ❌
+
+Gunakan **anon public key** karena aman untuk di-expose di browser.
+Secret key hanya untuk backend/server saja.
 
 ## 4. Test Connection
 

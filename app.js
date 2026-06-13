@@ -2,9 +2,13 @@
 const STORAGE_KEY = 'debtpilot-state-v1';
 const SESSION_KEY = 'debtpilot-session-v1';
 
-// Supabase Configuration
+// ========== SUPABASE CONFIGURATION ==========
+// Credentials untuk real-time data sync
+// Dapatkan dari: Supabase Dashboard → Settings → API
+// SUPABASE_URL: Project URL
+// SUPABASE_KEY: anon public key (BUKAN secret key)
 const SUPABASE_URL = 'https://vrpfkpqmzfcehskczupd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZycGZrcHFtemZjZWhza2N6dXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkzNzE2MDAsImV4cCI6MTczNTA4MTYwMH0.0qPxM7nXqmWnH5fJDpJQdqmjMjF8vUHhR7OGdLvMVpE';
+const SUPABASE_KEY = 'sb_publishable_1VZ6iZWdGiJX_jQCELROIA_kKPuZ9dh';
 
 let supabase = null;
 let dataChannel = null;
