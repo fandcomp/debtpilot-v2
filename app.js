@@ -280,15 +280,6 @@ const Calc = {
 
     if (summaries.length === 0) return insights;
 
-    const largestDebt = summaries.reduce((prev, curr) => curr.remaining > prev.remaining ? curr : prev);
-    if (largestDebt && largestDebt.remaining > 0) {
-      insights.push({
-        type: 'priority',
-        title: 'Prioritas utama',
-        message: `Platform dengan sisa hutang terbesar adalah <strong>${largestDebt.platform}</strong> (${Format.money(largestDebt.remaining)}).`,
-        icon: '📌',
-      });
-    }
 
     const soonDue = summaries.filter((d) => d.remaining > 0 && d.dueDays > 0 && d.dueDays <= 30).sort((a, b) => a.dueDays - b.dueDays);
     if (soonDue.length > 0) {
@@ -923,7 +914,6 @@ function renderDebtTable() {
       <td>${Format.money(debt.paid)}</td>
       <td>${Format.money(debt.remaining)}</td>
       <td><span class="status-badge ${statusClass(debt)}">${debt.status}</span></td>
-      <td>${debt.priority}</td>
       <td>${Format.date(debt.dueDate)}</td>
       <td>
         <div class="progress-mini">
@@ -1438,7 +1428,6 @@ function handleSetDebtSubmit(event) {
         platform,
         initialDebt: amount,
         dueDate,
-        priority: index + 1,
       });
     }
   });
