@@ -309,6 +309,17 @@ const els = {
   payoffButton: document.getElementById('payoffButton'),
   platformRemainingLabel: document.getElementById('platformRemainingLabel'),
   platformRemainingMeta: document.getElementById('platformRemainingMeta'),
+  debtForm: document.getElementById('debtForm'),
+  debtEditId: document.getElementById('debtEditId'),
+  debtPlatform: document.getElementById('debtPlatform'),
+  debtInitialDebt: document.getElementById('debtInitialDebt'),
+  debtInstallment: document.getElementById('debtInstallment'),
+  debtDueDate: document.getElementById('debtDueDate'),
+  debtPriority: document.getElementById('debtPriority'),
+  debtFormTitle: document.getElementById('debtFormTitle'),
+  debtFormDesc: document.getElementById('debtFormDesc'),
+  debtSubmitBtn: document.getElementById('debtSubmitBtn'),
+  debtCancelBtn: document.getElementById('debtCancelBtn'),
   debtTableBody: document.getElementById('debtTableBody'),
   historySearch: document.getElementById('historySearch'),
   historyPlatformFilter: document.getElementById('historyPlatformFilter'),
@@ -713,6 +724,12 @@ function renderDebtTable() {
           <div class="progress-mini-track"><div class="progress-mini-fill" style="width:${Utils.clamp(debt.completion * 100, 0, 100)}%"></div></div>
         </div>
       </td>
+      <td>
+        <div class="table-actions">
+          <button type="button" data-action="edit-debt" data-platform="${debt.platform}" title="Edit utang">Edit</button>
+          <button type="button" data-action="delete-debt" data-platform="${debt.platform}" title="Hapus utang">Delete</button>
+        </div>
+      </td>
     </tr>
   `).join('');
 }
@@ -998,6 +1015,90 @@ function handleEditPaymentSubmit(event) {
 function handleModalClick(event) {
   if (event.target.matches('[data-close-modal]') || event.target === els.paymentModal.querySelector('.modal-backdrop')) {
     closePaymentModal();
+  }
+}
+
+// ========== FORM: DEBT MANAGEMENT ==========
+function handleDebtSubmit(event) {
+  event.preventDefault();
+  const platform = els.debtPlatform.value.trim();
+  const initialDebt = Math.max(0, Number(els.debtInitialDebt.value) || 0);
+  const installment = Math.max(0, Number(els.debtInstallment.value) || 0);
+  const dueDate = els.debtDueDate.value;
+  const priority = Math.max(1, Number(els.debtPriority.value) || 1);
+  const editId = els.debtEditId.value;
+
+  if (!platform || !initialDebt || !dueDate) {
+    showToast('Data tidak lengkap', 'Platform, tagihan awal, dan tenggat wajib diisi.', 'danger');
+    return;
+  }
+
+  if (editId) {
+    // Edit existing debt
+    const debtIndex = state.debts.findIndex(d => d.platform === editId);
+    if (debtIndex >= 0) {
+      state.debts[debtIndex] = { platform, initialDebt, installment, dueDate, priority };
+    }
+    showToast('Utang diperbarui', `${platform} berhasil diubah.`, 'success');
+  } else {
+    // Check if platform already exists
+    if (state.debts.some(d => d.platform === platform)) {
+      showToast('Platform sudah ada', 'Gunakan form di atas untuk mengubah data yang sudah ada.', 'warning');
+      return;
+    }
+    // Add new debt
+    state.debts.push({ platform, initialDebt, installment, dueDate, priority });
+    showToast('Utang ditambahkan', `${platform} berhasil ditambahkan.`, 'success');
+  }
+
+  saveState();
+  renderAll();
+  resetDebtForm();
+}
+
+function resetDebtForm() {
+  els.debtEditId.value = '';
+  els.debtPlatform.value = '';
+  els.debtInitialDebt.value = '';
+  els.debtInstallment.value = '';
+  els.debtDueDate.value = '';
+  els.debtPriority.value = '1';
+  els.debtFormTitle.textContent = 'Tambah utang baru';
+  els.debtFormDesc.textContent = 'Masukkan detail utang dengan platform, nominal tagihan, dan tenggat waktu.';
+  els.debtSubmitBtn.textContent = 'Tambah utang';
+  els.debtCancelBtn.classList.add('hidden');
+}
+
+function handleDebtTableAction(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+
+  const platform = button.dataset.platform;
+  const action = button.dataset.action;
+
+  if (action === 'edit-debt') {
+    const debt = state.debts.find(d => d.platform === platform);
+    if (!debt) return;
+
+    els.debtEditId.value = platform;
+    els.debtPlatform.value = debt.platform;
+    els.debtInitialDebt.value = debt.initialDebt;
+    els.debtInstallment.value = debt.installment || '';
+    els.debtDueDate.value = debt.dueDate;
+    els.debtPriority.value = debt.priority;
+    els.debtFormTitle.textContent = 'Edit utang';
+    els.debtFormDesc.textContent = `Mengubah data utang ${platform}.`;
+    els.debtSubmitBtn.textContent = 'Simpan perubahan';
+    els.debtCancelBtn.classList.remove('hidden');
+
+    // Scroll ke form
+    els.debtForm.scrollIntoView({ behavior: 'smooth' });
+  } else if (action === 'delete-debt') {
+    if (!window.confirm(`Hapus utang untuk ${platform}? Riwayat pembayaran tidak akan dihapus.`)) return;
+    state.debts = state.debts.filter(d => d.platform !== platform);
+    saveState();
+    renderAll();
+    showToast('Utang dihapus', `${platform} berhasil dihapus.`, 'success');
   }
 }
 
@@ -1303,9 +1404,12 @@ function attachEvents() {
   }
 
   els.paymentForm.addEventListener('submit', handlePaymentSubmit);
+  els.debtForm.addEventListener('submit', handleDebtSubmit);
+  els.debtCancelBtn.addEventListener('click', resetDebtForm);
   els.settingsForm.addEventListener('submit', handleSettingsSubmit);
   els.setDebtForm.addEventListener('submit', handleSetDebtSubmit);
   els.editPaymentForm.addEventListener('submit', handleEditPaymentSubmit);
+  els.debtTableBody.addEventListener('click', handleDebtTableAction);
   els.resetDataButton.addEventListener('click', handleResetData);
   els.logoutButton.addEventListener('click', handleLogout);
   els.sidebarOpen.addEventListener('click', openSidebar);
