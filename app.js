@@ -1608,38 +1608,59 @@ function attachEvents() {
 
 // ========== INITIALIZATION ==========
 async function init() {
-  // Initialize Supabase
-  await initSupabase();
+  try {
+    console.log('🚀 App initializing...');
 
-  // Load state from Supabase or localStorage
-  const loadedState = await loadState();
-  if (loadedState) {
-    state = loadedState;
-  }
+    // Initialize Supabase
+    const supabaseReady = await initSupabase();
+    console.log('Supabase status:', supabaseReady ? '✅ Connected' : '⚠️ Not connected (will use localStorage)');
 
-  // Setup real-time sync
-  if (supabase) {
-    setupRealtimeSync('default-user');
-  }
+    // Load state from Supabase or localStorage
+    try {
+      const loadedState = await loadState();
+      if (loadedState) {
+        state = loadedState;
+        console.log('✅ State loaded successfully');
+      }
+    } catch (error) {
+      console.error('State load error:', error);
+      console.log('Using default state');
+    }
 
-  // Restore current user from session
-  const storedUser = sessionStorage.getItem('currentUser');
-  if (storedUser) {
-    state.currentUser = JSON.parse(storedUser);
-  }
+    // Setup real-time sync
+    if (supabase) {
+      setupRealtimeSync('default-user');
+    }
 
-  attachEvents();
-  renderLoginHint();
-  renderDateDefaults();
-  renderQuickAmountButtons();
+    // Restore current user from session
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+      state.currentUser = JSON.parse(storedUser);
+    }
 
-  if (isAuthenticated()) {
-    showApp();
-    renderRoleBasedUI();
-    renderAll();
-  } else {
+    attachEvents();
+    renderLoginHint();
+    renderDateDefaults();
+    renderQuickAmountButtons();
+
+    if (isAuthenticated()) {
+      showApp();
+      renderRoleBasedUI();
+      renderAll();
+      console.log('✅ App loaded - authenticated');
+    } else {
+      showLogin();
+      console.log('✅ App loaded - showing login');
+    }
+  } catch (error) {
+    console.error('❌ Init error:', error);
     showLogin();
   }
 }
 
-init();
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

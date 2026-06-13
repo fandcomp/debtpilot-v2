@@ -7,11 +7,12 @@
 3. Create new project dengan nama `debtpilot`
 4. Tunggu project initialize (5-10 menit)
 
-## 2. Buat Tabel `app_state`
+## 2. Buat Tabel `app_state` & Storage Bucket
 
-Di Supabase Dashboard → SQL Editor, jalankan query ini:
+### A. Di Supabase Dashboard → SQL Editor, jalankan query ini:
 
 ```sql
+-- Create app_state table
 CREATE TABLE app_state (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT UNIQUE NOT NULL,
@@ -23,15 +24,56 @@ CREATE TABLE app_state (
 -- Enable RLS
 ALTER TABLE app_state ENABLE ROW LEVEL SECURITY;
 
--- Create policy untuk public read/write (gunakan dengan hati-hati)
+-- Create policy untuk public read/write
 CREATE POLICY "Allow public access to app_state"
   ON app_state
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
--- Create realtime subscription
+-- Enable realtime subscription
 ALTER PUBLICATION supabase_realtime ADD TABLE app_state;
+
+-- Create uploads table untuk track bukti pembayaran
+CREATE TABLE uploads (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  username TEXT NOT NULL,
+  nominal NUMERIC NOT NULL,
+  status TEXT DEFAULT 'pending',
+  nota_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS pada uploads
+ALTER TABLE uploads ENABLE ROW LEVEL SECURITY;
+
+-- Create policy
+CREATE POLICY "Allow public access to uploads"
+  ON uploads
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Enable realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE uploads;
+```
+
+### B. Buat Storage Bucket untuk Gambar
+
+Di Supabase Dashboard → Storage:
+
+1. **Create new bucket** dengan nama: `payment-proofs`
+2. **Make it public** (toggle "Public bucket")
+3. **File size limit**: 50 MB
+4. **Allowed MIME types**: `image/*`
+
+Atau gunakan SQL Editor:
+
+```sql
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('payment-proofs', 'payment-proofs', true);
 ```
 
 ## 3. Get Credentials dari Supabase
