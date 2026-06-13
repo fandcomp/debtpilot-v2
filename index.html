@@ -237,46 +237,48 @@
           </div>
         </div>
 
-        <form class="card form-card" id="debtForm">
-          <div class="card-header compact">
-            <div>
-              <h3 id="debtFormTitle">Tambah utang baru</h3>
-              <p id="debtFormDesc">Masukkan detail utang dengan platform, nominal tagihan, dan tenggat waktu.</p>
+        <div id="debtFormContainer">
+          <form class="card form-card" id="debtForm">
+            <div class="card-header compact">
+              <div>
+                <h3 id="debtFormTitle">Tambah utang baru</h3>
+                <p id="debtFormDesc">Masukkan detail utang dengan platform, nominal tagihan, dan tenggat waktu.</p>
+              </div>
             </div>
-          </div>
 
-          <input type="hidden" id="debtEditId">
+            <input type="hidden" id="debtEditId">
 
-          <label>
-            <span>Platform</span>
-            <input type="text" id="debtPlatform" placeholder="Contoh: Bank Jago, Kredivo" required>
-          </label>
+            <label>
+              <span>Platform</span>
+              <input type="text" id="debtPlatform" placeholder="Contoh: Bank Jago, Kredivo" required>
+            </label>
 
-          <label>
-            <span>Total tagihan awal</span>
-            <input type="number" id="debtInitialDebt" min="0" step="1000" placeholder="Rp0" required>
-          </label>
+            <label>
+              <span>Total tagihan awal</span>
+              <input type="number" id="debtInitialDebt" min="0" step="1000" placeholder="Rp0" required>
+            </label>
 
-          <label>
-            <span>Nominal angsuran per bulan</span>
-            <input type="number" id="debtInstallment" min="0" step="1000" placeholder="Rp0">
-          </label>
+            <label>
+              <span>Nominal angsuran per bulan</span>
+              <input type="number" id="debtInstallment" min="0" step="1000" placeholder="Rp0">
+            </label>
 
-          <label>
-            <span>Tenggat waktu</span>
-            <input type="date" id="debtDueDate" required>
-          </label>
+            <label>
+              <span>Tenggat waktu</span>
+              <input type="date" id="debtDueDate" required>
+            </label>
 
-          <label>
-            <span>Prioritas (1=tertinggi)</span>
-            <input type="number" id="debtPriority" min="1" step="1" placeholder="1" value="1" required>
-          </label>
+            <label>
+              <span>Prioritas (1=tertinggi)</span>
+              <input type="number" id="debtPriority" min="1" step="1" placeholder="1" value="1" required>
+            </label>
 
-          <div class="action-row">
-            <button class="primary-btn" type="submit" id="debtSubmitBtn">Tambah utang</button>
-            <button class="ghost-btn hidden" type="button" id="debtCancelBtn">Batal edit</button>
-          </div>
-        </form>
+            <div class="action-row">
+              <button class="primary-btn" type="submit" id="debtSubmitBtn">Tambah utang</button>
+              <button class="ghost-btn hidden" type="button" id="debtCancelBtn">Batal edit</button>
+            </div>
+          </form>
+        </div>
 
         <div class="card table-card">
           <div class="table-wrap">

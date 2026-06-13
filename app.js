@@ -739,7 +739,19 @@ function renderSelectedPlatformSummary() {
 // ========== RENDER: DEBT DETAILS PANEL ==========
 function renderDebtTable() {
   const summaries = Calc.platformSummaries();
-  els.debtTableBody.innerHTML = summaries.map((debt) => `
+  const isAdminUser = isAdmin();
+
+  els.debtTableBody.innerHTML = summaries.map((debt) => {
+    const actionsCell = isAdminUser ? `
+      <td>
+        <div class="table-actions">
+          <button type="button" data-action="edit-debt" data-platform="${debt.platform}" title="Edit utang">Edit</button>
+          <button type="button" data-action="delete-debt" data-platform="${debt.platform}" title="Hapus utang">Delete</button>
+        </div>
+      </td>
+    ` : '<td>-</td>';
+
+    return `
     <tr>
       <td><strong>${debt.platform}</strong></td>
       <td>${Format.money(debt.initialDebt)}</td>
@@ -754,14 +766,10 @@ function renderDebtTable() {
           <div class="progress-mini-track"><div class="progress-mini-fill" style="width:${Utils.clamp(debt.completion * 100, 0, 100)}%"></div></div>
         </div>
       </td>
-      <td>
-        <div class="table-actions">
-          <button type="button" data-action="edit-debt" data-platform="${debt.platform}" title="Edit utang">Edit</button>
-          <button type="button" data-action="delete-debt" data-platform="${debt.platform}" title="Hapus utang">Delete</button>
-        </div>
-      </td>
+      ${actionsCell}
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function statusClass(debt) {
@@ -828,6 +836,18 @@ function renderDateDefaults() {
   els.editPaymentDate.value = dateValue;
 }
 
+function renderDebtFormVisibility() {
+  const debtFormContainer = document.getElementById('debtFormContainer');
+  if (!debtFormContainer) return;
+
+  const isAdminUser = isAdmin();
+  if (isAdminUser) {
+    debtFormContainer.classList.remove('hidden');
+  } else {
+    debtFormContainer.classList.add('hidden');
+  }
+}
+
 // ========== RENDER: COMPREHENSIVE ==========
 function renderAll() {
   const summaries = Calc.platformSummaries();
@@ -842,6 +862,7 @@ function renderAll() {
   renderPlatformSelectors();
   renderQuickAmountButtons();
   renderSelectedPlatformSummary();
+  renderDebtFormVisibility();
   renderDebtTable();
   renderHistoryTable();
   renderSettingsForm();
