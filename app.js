@@ -347,7 +347,6 @@ const els = {
   imagePreview: document.getElementById('imagePreview'),
   uploadHistoryBody: document.getElementById('uploadHistoryBody'),
   transaksiContainer: document.getElementById('transaksiContainer'),
-  laporanTableBody: document.getElementById('laporanTableBody'),
 };
 
 // ========== RENDER: ROLE-BASED UI ==========
@@ -658,25 +657,56 @@ function renderTransaksiPanel() {
 function renderLaporanPanel() {
   const laporanData = state.laporan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
   const isAdminUser = isAdmin();
+  const container = document.getElementById('laporanContent');
 
-  els.laporanTableBody.innerHTML = laporanData.map(item => `
-    <tr>
-      <td>${item.tanggal}</td>
-      <td><strong>${item.platform}</strong></td>
-      <td><img src="${item.nota}" alt="nota" style="max-width:80px;height:auto;border-radius:4px;cursor:pointer;" onclick="showImageModal('${item.nota}')"></td>
-      <td>${Format.money(item.nominal)}</td>
-      <td>
-        ${isAdminUser ? `
-          <input type="text" value="${item.keterangan}" class="keterangan-edit" data-id="${item.id}" style="width:100%;padding:4px;">
-          <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn" style="font-size:0.8rem;padding:4px 8px;margin-top:4px;">Simpan</button>
-        ` : item.keterangan}
-      </td>
-    </tr>
-  `).join('') || `
-    <tr>
-      <td colspan="5">Belum ada laporan pembayaran.</td>
-    </tr>
-  `;
+  if (!container) return;
+
+  if (laporanData.length === 0) {
+    container.innerHTML = '<div class="card"><p style="text-align:center;color:#999;padding:20px;">Belum ada laporan pembayaran.</p></div>';
+    return;
+  }
+
+  container.innerHTML = laporanData.map(item => `
+    <div class="laporan-card card">
+      <div class="laporan-card-header">
+        <div class="laporan-info">
+          <div class="laporan-date">${Format.date(item.tanggal)}</div>
+          <div class="laporan-platform"><strong>${item.platform}</strong></div>
+          <div class="laporan-nominal">${Format.money(item.nominal)}</div>
+        </div>
+      </div>
+
+      <div class="laporan-card-body">
+        <div class="laporan-image-section">
+          <img src="${item.nota}" alt="Bukti pembayaran" class="laporan-image" onclick="showImageModal('${item.nota}')">
+        </div>
+
+        <div class="laporan-details">
+          <div class="detail-item">
+            <span class="detail-label">Tanggal</span>
+            <span class="detail-value">${Format.date(item.tanggal)}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Platform</span>
+            <span class="detail-value">${item.platform}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Nominal</span>
+            <span class="detail-value"><strong>${Format.money(item.nominal)}</strong></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Keterangan</span>
+            <div class="keterangan-section">
+              ${isAdminUser ? `
+                <input type="text" value="${item.keterangan}" class="keterangan-edit" data-id="${item.id}" placeholder="Tambahkan keterangan...">
+                <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn" style="font-size:0.85rem;padding:6px 12px;margin-top:6px;">Simpan</button>
+              ` : `<span class="detail-value">${item.keterangan || '-'}</span>`}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ========== RENDER: PAYMENT PANEL ==========
@@ -1387,21 +1417,19 @@ function attachEvents() {
   }
 
   // Laporan events
-  if (els.laporanTableBody) {
-    els.laporanTableBody.addEventListener('click', (e) => {
-      if (e.target.dataset.action === 'save-keterangan') {
-        const id = e.target.dataset.id;
-        const keterangan = e.target.closest('tr').querySelector('.keterangan-edit').value;
-        const laporan = state.laporan.find(l => l.id === id);
-        if (laporan) {
-          laporan.keterangan = keterangan;
-          saveState();
-          renderLaporanPanel();
-          showToast('Keterangan diupdate', 'Laporan berhasil diperbarui.', 'success');
-        }
+  document.addEventListener('click', (e) => {
+    if (e.target.dataset.action === 'save-keterangan') {
+      const id = e.target.dataset.id;
+      const keterangan = e.target.closest('.laporan-card').querySelector('.keterangan-edit').value;
+      const laporan = state.laporan.find(l => l.id === id);
+      if (laporan) {
+        laporan.keterangan = keterangan;
+        saveState();
+        renderLaporanPanel();
+        showToast('Keterangan diupdate', 'Laporan berhasil diperbarui.', 'success');
       }
-    });
-  }
+    }
+  });
 
   els.paymentForm.addEventListener('submit', handlePaymentSubmit);
   els.debtForm.addEventListener('submit', handleDebtSubmit);
