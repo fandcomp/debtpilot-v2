@@ -7,7 +7,7 @@ const SESSION_KEY = 'debtpilot-session-v1';
 // Dapatkan dari: Supabase Dashboard → Settings → API
 // SUPABASE_URL: Project URL
 // SUPABASE_KEY: anon public key (BUKAN secret key)
-const SUPABASE_URL = 'https://vrpfkpqmzfcehskczupd.supabase.co';
+const SUPABASE_URL = 'https://wubbbjqqdowuqxjpmqpt.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_publishable_1VZ6iZWdGiJX_jQCELROIA_kKPuZ9dh';
 
 let supabase = null;
@@ -404,8 +404,6 @@ const els = {
   loginHint: document.getElementById('loginHint'),
   sidebarUsername: document.getElementById('sidebarUsername'),
   sidebarUserMeta: document.getElementById('sidebarUserMeta'),
-  topbarMonthlyTarget: document.getElementById('topbarMonthlyTarget'),
-  topbarDebtFreeTarget: document.getElementById('topbarDebtFreeTarget'),
   heroTotalDebt: document.getElementById('heroTotalDebt'),
   heroSubtitle: document.getElementById('heroSubtitle'),
   heroProgressLabel: document.getElementById('heroProgressLabel'),
@@ -515,8 +513,8 @@ function renderSidebarMeta() {
 }
 
 function renderTopbarMeta() {
-  els.topbarMonthlyTarget.textContent = Format.money(state.settings.monthlyTarget);
-  els.topbarDebtFreeTarget.textContent = Format.date(state.settings.targetDate);
+  // Empty topbar targets - just showing titles
+  // No data needed
 }
 
 // ========== RENDER: DASHBOARD CARDS & CHARTS ==========
