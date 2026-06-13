@@ -7,7 +7,7 @@ const SESSION_KEY = 'debtpilot-session-v1';
 // Dapatkan dari: Supabase Dashboard → Settings → API
 // SUPABASE_URL: Project URL
 // SUPABASE_KEY: anon public key (BUKAN secret key)
-const SUPABASE_URL = 'https://wubbbjqqdowuqxjpmqpt.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://wubbbjqqdowuqxjpmqpt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1VZ6iZWdGiJX_jQCELROIA_kKPuZ9dh';
 
 let supabase = null;
@@ -79,18 +79,61 @@ const Utils = {
 };
 
 // ========== SUPABASE FUNCTIONS ==========
-async function initSupabase() {
-  if (!window.supabase) {
-    console.warn('Supabase library not loaded');
+async function testSupabaseConnection() {
+  if (!supabase) {
+    console.error('Supabase not initialized');
     return false;
   }
 
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log('✅ Supabase initialized');
+    console.log('🔍 Testing Supabase connection...');
+
+    // Test reading from app_state table
+    const { data, error } = await supabase
+      .from('app_state')
+      .select('*')
+      .limit(1);
+
+    if (error) {
+      console.error('❌ Connection test failed:', error.message);
+      return false;
+    }
+
+    console.log('✅ Supabase connection verified!');
+    console.log(`📊 Tables accessible: ${data !== undefined ? 'YES' : 'NO'}`);
     return true;
   } catch (error) {
-    console.error('Supabase init error:', error);
+    console.error('❌ Connection test error:', error);
+    return false;
+  }
+}
+
+async function initSupabase() {
+  if (!window.supabase) {
+    console.warn('⚠️ Supabase library not loaded');
+    return false;
+  }
+
+  try {
+    console.log('🔧 Initializing Supabase...');
+    console.log(`   URL: ${SUPABASE_URL}`);
+    console.log(`   Key: ${SUPABASE_KEY.substring(0, 20)}...`);
+
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase client created');
+
+    // Test connection
+    const isConnected = await testSupabaseConnection();
+
+    if (isConnected) {
+      console.log('✅ Supabase fully operational');
+    } else {
+      console.warn('⚠️ Supabase initialized but connection test failed - will use localStorage');
+    }
+
+    return isConnected;
+  } catch (error) {
+    console.error('❌ Supabase init error:', error);
     return false;
   }
 }
@@ -1664,3 +1707,27 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+// ========== WINDOW DEBUGGING HELPERS ==========
+// Type in console: testConnection()
+window.testConnection = async () => {
+  console.log('🧪 Running connection test...');
+  if (!supabase) {
+    console.error('Supabase not initialized. Run init() first.');
+    return;
+  }
+  await testSupabaseConnection();
+};
+
+// Type in console: checkState()
+window.checkState = () => {
+  console.log('📊 Current State:', JSON.parse(JSON.stringify(state)));
+};
+
+// Type in console: checkSupabase()
+window.checkSupabase = () => {
+  console.log('🔍 Supabase Status:');
+  console.log('  - Initialized:', supabase !== null);
+  console.log('  - URL:', SUPABASE_URL);
+  console.log('  - Key present:', SUPABASE_KEY.length > 0);
+};
