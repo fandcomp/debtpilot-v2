@@ -855,7 +855,10 @@ function renderLaporanPanel() {
             <div class="keterangan-section">
               ${isAdminUser ? `
                 <input type="text" value="${item.keterangan}" class="keterangan-edit" data-id="${item.id}" placeholder="Tambahkan keterangan...">
-                <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn" style="font-size:0.85rem;padding:6px 12px;margin-top:6px;">Simpan</button>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                  <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn" style="font-size:0.85rem;padding:6px 12px;flex:1;">Simpan</button>
+                  <button type="button" data-action="delete-laporan" data-id="${item.id}" class="danger-btn" style="font-size:0.85rem;padding:6px 12px;flex:1;">Hapus</button>
+                </div>
               ` : `<span class="detail-value">${item.keterangan || '-'}</span>`}
             </div>
           </div>
@@ -1696,6 +1699,13 @@ function attachEvents() {
         renderLaporanPanel();
         showToast('Keterangan diupdate', 'Laporan berhasil diperbarui.', 'success');
       }
+    } else if (e.target.dataset.action === 'delete-laporan') {
+      const id = e.target.dataset.id;
+      if (!window.confirm('Hapus item laporan ini? Tindakan tidak bisa dibatalkan.')) return;
+      state.laporan = state.laporan.filter(l => l.id !== id);
+      saveState();
+      renderLaporanPanel();
+      showToast('Item dihapus', 'Laporan berhasil dihapus.', 'success');
     }
   });
 
