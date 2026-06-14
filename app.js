@@ -694,10 +694,10 @@ function buildLineChart(series) {
 }
 
 function buildBarChart(summaries) {
-  const width = 720;
   const barHeight = 38;
   const gap = 16;
-  const padding = { top: 20, right: 28, bottom: 16, left: 160 };
+  const padding = { top: 20, right: 28, bottom: 16, left: 140 };
+  const width = 100; // Use percentage-based width for responsive
   const height = padding.top + padding.bottom + summaries.length * (barHeight + gap) - gap;
   const maxValue = Math.max(...summaries.map((item) => item.remaining), 1);
   const bars = summaries.map((item, index) => {
@@ -708,16 +708,16 @@ function buildBarChart(summaries) {
     const percentLabel = `${Math.round((item.remaining / item.initialDebt) * 100)}% sisa`;
     return `
       <g transform="translate(0 ${y})">
-        <text x="0" y="24" class="chart-platform">${label}</text>
-        <rect x="${padding.left}" y="0" width="${width - padding.left - padding.right}" height="${barHeight}" rx="16" fill="rgba(20, 32, 45, 0.06)"></rect>
-        <rect x="${padding.left}" y="0" width="${barWidth}" height="${barHeight}" rx="16" fill="url(#barGradient)"></rect>
-        <text x="${padding.left + barWidth + 12}" y="24" class="chart-bar-label">${remainingLabel} · ${percentLabel}</text>
+        <text x="4" y="24" class="chart-platform" font-size="13">${label}</text>
+        <rect x="${padding.left}" y="0" width="${width - padding.left - padding.right}" height="${barHeight}" rx="8" fill="rgba(20, 32, 45, 0.06)"></rect>
+        <rect x="${padding.left}" y="0" width="${barWidth}" height="${barHeight}" rx="8" fill="url(#barGradient)"></rect>
+        <text x="${padding.left + barWidth + 8}" y="24" class="chart-bar-label" font-size="12">${remainingLabel} · ${percentLabel}</text>
       </g>
     `;
   }).join('');
 
   return `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Bar chart sisa utang per platform">
+    <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Bar chart sisa utang per platform" style="width:100%;height:auto;max-width:100%;overflow:visible;">
       <defs>
         <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#0f7b6c"></stop>

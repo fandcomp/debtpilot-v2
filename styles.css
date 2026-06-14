@@ -570,12 +570,26 @@ label span {
 
 .chart-frame {
   min-height: 280px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .chart-frame svg {
   width: 100%;
   height: auto;
   display: block;
+  min-width: fit-content;
+}
+
+@media (max-width: 900px) {
+  .chart-frame {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-frame svg {
+    min-width: 100%;
+  }
 }
 
 .section-head {
