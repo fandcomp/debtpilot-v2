@@ -344,6 +344,7 @@ const Calc = {
 
 // ========== STATE MANAGEMENT ==========
 let state = structuredClone(DEFAULT_STATE);
+window.state = state; // Expose state globally for debugging
 let activePanel = 'dashboard';
 let historyFilters = { search: '', platform: 'all', sort: 'newest' };
 let editPaymentId = null;
@@ -354,7 +355,7 @@ async function loadState() {
     if (supabaseClient) {
       const remoteState = await loadStateFromSupabase('default-user');
       if (remoteState) {
-        return remoteState;
+        return mergeState(DEFAULT_STATE, remoteState);
       }
     }
 
@@ -370,14 +371,20 @@ async function loadState() {
 
 function mergeState(base, incoming) {
   return {
+    currentUser: incoming.currentUser || base.currentUser,
     auth: { ...base.auth, ...(incoming.auth || {}) },
     settings: { ...base.settings, ...(incoming.settings || {}) },
-    debts: Array.isArray(incoming.debts) && incoming.debts.length ? incoming.debts.map((debt) => ({ ...debt })) : structuredClone(base.debts),
+    debts: Array.isArray(incoming.debts) ? incoming.debts.map((debt) => ({ ...debt })) : structuredClone(base.debts),
     payments: Array.isArray(incoming.payments) ? incoming.payments.map((payment) => ({ ...payment })) : structuredClone(base.payments),
+    uploads: Array.isArray(incoming.uploads) ? incoming.uploads.map((u) => ({ ...u })) : structuredClone(base.uploads),
+    transaksi: Array.isArray(incoming.transaksi) ? incoming.transaksi.map((t) => ({ ...t })) : structuredClone(base.transaksi),
+    laporan: Array.isArray(incoming.laporan) ? incoming.laporan.map((l) => ({ ...l })) : structuredClone(base.laporan),
+    debtProofs: Array.isArray(incoming.debtProofs) ? incoming.debtProofs.map((p) => ({ ...p })) : structuredClone(base.debtProofs),
   };
 }
 
 function saveState() {
+  window.state = state; // Keep window.state in sync
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(STORAGE_KEY + '-ts', Date.now().toString());
   // Save to Supabase
@@ -1360,9 +1367,11 @@ function handleDebtProofImageSelect(event) {
 function handleDebtProofSubmit(event) {
   event.preventDefault();
 
-  const platform = els.debtProofPlatform.value;
-  const name = els.debtProofName.value.trim();
-  const imageData = els.debtProofForm.dataset.imageData;
+  // Get form directly instead of via els
+  const form = document.getElementById('debtProofForm');
+  const platform = document.getElementById('debtProofPlatform')?.value || '';
+  const name = document.getElementById('debtProofName')?.value?.trim() || '';
+  const imageData = form?.dataset.imageData;
   const user = getCurrentUser();
 
   if (!platform || !name || !imageData) {
@@ -1896,6 +1905,7 @@ async function init() {
       const loadedState = await loadState();
       if (loadedState) {
         state = loadedState;
+        window.state = state; // Sync to window
         console.log('✅ State loaded successfully');
       }
     } catch (error) {
