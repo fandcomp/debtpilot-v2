@@ -706,12 +706,20 @@ function buildBarChart(summaries) {
     const label = item.platform;
     const remainingLabel = Format.money(item.remaining);
     const percentLabel = `${Math.round((item.remaining / item.initialDebt) * 100)}% sisa`;
+    const labelText = `${remainingLabel} · ${percentLabel}`;
+
+    // Check if label fits inside bar (estimate ~60px per label)
+    const labelEstimatedWidth = 60;
+    const labelFitsInside = barWidth > labelEstimatedWidth;
+    const labelX = labelFitsInside ? padding.left + barWidth - labelEstimatedWidth + 8 : padding.left + barWidth + 12;
+    const labelFill = labelFitsInside ? '#fff' : '#666';
+
     return `
       <g transform="translate(0 ${y})">
         <text x="0" y="24" class="chart-platform">${label}</text>
         <rect x="${padding.left}" y="0" width="${width - padding.left - padding.right}" height="${barHeight}" rx="16" fill="rgba(20, 32, 45, 0.06)"></rect>
         <rect x="${padding.left}" y="0" width="${barWidth}" height="${barHeight}" rx="16" fill="url(#barGradient)"></rect>
-        <text x="${padding.left + barWidth + 12}" y="24" class="chart-bar-label">${remainingLabel} · ${percentLabel}</text>
+        <text x="${labelX}" y="24" class="chart-bar-label" fill="${labelFill}" font-weight="500">${labelText}</text>
       </g>
     `;
   }).join('');
