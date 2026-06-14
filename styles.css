@@ -1494,3 +1494,30 @@ th {
     opacity: 0.7;
   }
 }
+
+/* ========== TAB STYLING ========== */
+.tab-btn {
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: var(--primary) !important;
+}
+
+.tab-content {
+  display: none !important;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

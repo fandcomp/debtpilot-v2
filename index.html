@@ -97,13 +97,6 @@
           </div>
         </div>
         <div class="topbar-right">
-          <!-- Targets section - empty for now, just titles -->
-          <div class="topbar-stat">
-            <span>Target bulanan</span>
-          </div>
-          <div class="topbar-stat">
-            <span>Target bebas utang</span>
-          </div>
         </div>
       </header>
 
@@ -237,57 +230,106 @@
           </div>
         </div>
 
-        <div id="debtFormContainer">
-          <form class="card form-card" id="debtForm">
-            <div class="card-header compact">
-              <div>
-                <h3 id="debtFormTitle">Tambah utang baru</h3>
-                <p id="debtFormDesc">Masukkan platform, total tagihan, dan lama pembayaran. Angsuran per bulan dihitung otomatis.</p>
-              </div>
-            </div>
-
-            <input type="hidden" id="debtEditId">
-
-            <label>
-              <span>Platform</span>
-              <input type="text" id="debtPlatform" placeholder="Contoh: Bank Jago, Kredivo" required>
-            </label>
-
-            <label>
-              <span>Total tagihan awal</span>
-              <input type="number" id="debtInitialDebt" min="0" placeholder="Rp0" required>
-            </label>
-
-            <label>
-              <span>Lama pembayaran (bulan)</span>
-              <input type="number" id="debtMonths" min="1" step="1" placeholder="12" value="12" required>
-            </label>
-
-            <div class="action-row">
-              <button class="primary-btn" type="submit" id="debtSubmitBtn">Tambah utang</button>
-              <button class="ghost-btn hidden" type="button" id="debtCancelBtn">Batal edit</button>
-            </div>
-          </form>
+        <!-- Debt Details Tabs -->
+        <div class="card">
+          <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid #e0e0e0;padding-bottom:12px;">
+            <button class="tab-btn active" data-tab="debt-rincian" type="button" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:500;border-bottom:2px solid #007bff;color:#007bff;">Rincian Per Platform</button>
+            <button class="tab-btn" data-tab="debt-bukti" type="button" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:500;border-bottom:2px solid transparent;color:#666;">Bukti Pembayaran</button>
+          </div>
         </div>
 
-        <div class="card table-card">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Platform</th>
-                  <th>Initial debt</th>
-                  <th>Paid</th>
-                  <th>Remaining</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Due date</th>
-                  <th>Progress</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="debtTableBody"></tbody>
-            </table>
+        <!-- TAB 1: Rincian Per Platform -->
+        <div id="debt-rincian" class="tab-content active">
+          <div id="debtFormContainer">
+            <form class="card form-card" id="debtForm">
+              <div class="card-header compact">
+                <div>
+                  <h3 id="debtFormTitle">Tambah utang baru</h3>
+                  <p id="debtFormDesc">Masukkan platform, total tagihan, dan lama pembayaran. Angsuran per bulan dihitung otomatis.</p>
+                </div>
+              </div>
+
+              <input type="hidden" id="debtEditId">
+
+              <label>
+                <span>Platform</span>
+                <input type="text" id="debtPlatform" placeholder="Contoh: Bank Jago, Kredivo" required>
+              </label>
+
+              <label>
+                <span>Total tagihan awal</span>
+                <input type="number" id="debtInitialDebt" min="0" placeholder="Rp0" required>
+              </label>
+
+              <label>
+                <span>Lama pembayaran (bulan)</span>
+                <input type="number" id="debtMonths" min="1" step="1" placeholder="12" value="12" required>
+              </label>
+
+              <div class="action-row">
+                <button class="primary-btn" type="submit" id="debtSubmitBtn">Tambah utang</button>
+                <button class="ghost-btn hidden" type="button" id="debtCancelBtn">Batal edit</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Platform</th>
+                    <th>Initial debt</th>
+                    <th>Paid</th>
+                    <th>Remaining</th>
+                    <th>Status</th>
+                    <th>Due date</th>
+                    <th>Progress</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="debtTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Bukti Pembayaran -->
+        <div id="debt-bukti" class="tab-content">
+          <div id="debtProofContainer">
+            <form class="card form-card" id="debtProofForm">
+              <div class="card-header compact">
+                <div>
+                  <h3>Upload Bukti Pembayaran</h3>
+                  <p>Upload gambar bukti pembayaran dan beri keterangan.</p>
+                </div>
+              </div>
+
+              <label>
+                <span>Platform</span>
+                <select id="debtProofPlatform" required></select>
+              </label>
+
+              <label>
+                <span>Nama/Keterangan Bukti</span>
+                <input type="text" id="debtProofName" placeholder="Contoh: Invoice #123, Slip Transfer" required>
+              </label>
+
+              <label>
+                <span>Upload Gambar</span>
+                <input type="file" id="debtProofImage" accept="image/*" required>
+              </label>
+
+              <div id="debtProofPreview" style="margin:12px 0;"></div>
+
+              <div class="action-row">
+                <button class="primary-btn" type="submit">Upload Bukti</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card table-card">
+            <div id="debtProofGallery"></div>
           </div>
         </div>
       </section>
@@ -430,8 +472,8 @@
           <form class="card form-card" id="settingsForm">
             <div class="card-header compact">
               <div>
-                <h3>Account & target</h3>
-                <p>Perbarui username, password, target bulanan, dan tanggal bebas utang.</p>
+                <h3>Account settings</h3>
+                <p>Perbarui username dan password.</p>
               </div>
             </div>
 

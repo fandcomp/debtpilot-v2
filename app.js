@@ -43,6 +43,7 @@ const DEFAULT_STATE = {
   uploads: [], // New: Upload data
   transaksi: [], // New: Transaksi data
   laporan: [], // New: Laporan data
+  debtProofs: [], // Debt proof documents (images with descriptions)
   debts: [],
   payments: [],
 };
@@ -477,6 +478,12 @@ const els = {
   debtSubmitBtn: document.getElementById('debtSubmitBtn'),
   debtCancelBtn: document.getElementById('debtCancelBtn'),
   debtTableBody: document.getElementById('debtTableBody'),
+  debtProofForm: document.getElementById('debtProofForm'),
+  debtProofPlatform: document.getElementById('debtProofPlatform'),
+  debtProofName: document.getElementById('debtProofName'),
+  debtProofImage: document.getElementById('debtProofImage'),
+  debtProofPreview: document.getElementById('debtProofPreview'),
+  debtProofGallery: document.getElementById('debtProofGallery'),
   historySearch: document.getElementById('historySearch'),
   historyPlatformFilter: document.getElementById('historyPlatformFilter'),
   historySortFilter: document.getElementById('historySortFilter'),
@@ -895,6 +902,41 @@ function renderSelectedPlatformSummary() {
   els.payoffButton.disabled = selected.remaining <= 0;
 }
 
+// ========== RENDER: DEBT PROOF GALLERY ==========
+function renderDebtProofPlatformSelector() {
+  const summaries = Calc.platformSummaries();
+  const options = summaries.map(s => `<option value="${s.platform}">${s.platform}</option>`).join('');
+  els.debtProofPlatform.innerHTML = `<option value="">-- Pilih Platform --</option>${options}`;
+}
+
+function renderDebtProofGallery() {
+  const isAdminUser = isAdmin();
+
+  if (state.debtProofs.length === 0) {
+    els.debtProofGallery.innerHTML = '<div class="card"><p style="text-align:center;color:#999;padding:20px;">Belum ada bukti pembayaran yang diupload.</p></div>';
+    return;
+  }
+
+  els.debtProofGallery.innerHTML = state.debtProofs.map(proof => `
+    <div class="card" style="display:flex;gap:16px;padding:16px;margin-bottom:12px;">
+      <img src="${proof.image}" alt="${proof.name}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;">
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+          <div>
+            <div style="font-weight:600;color:#333;">${proof.name}</div>
+            <div style="font-size:0.85rem;color:#666;">${proof.platform}</div>
+            <div style="font-size:0.8rem;color:#999;margin-top:4px;">${Format.date(proof.uploadedAt)}</div>
+          </div>
+          ${isAdminUser ? `
+            <button type="button" data-action="delete-proof" data-id="${proof.id}" class="danger-btn" style="padding:6px 12px;font-size:0.85rem;">Hapus</button>
+          ` : ''}
+        </div>
+        ${proof.description ? `<div style="font-size:0.9rem;color:#555;margin-top:8px;">📝 ${proof.description}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
 // ========== RENDER: DEBT DETAILS PANEL ==========
 function renderDebtTable() {
   const summaries = Calc.platformSummaries();
@@ -1030,6 +1072,10 @@ function renderAll() {
   renderUploadHistory();
   renderTransaksiPanel();
   renderLaporanPanel();
+
+  // Debt proofs
+  renderDebtProofPlatformSelector();
+  renderDebtProofGallery();
 
   bindPlatformSummaryChange();
 }
@@ -1281,6 +1327,70 @@ function resetDebtForm() {
   els.debtFormDesc.textContent = 'Masukkan platform, total tagihan, dan lama pembayaran. Angsuran per bulan dihitung otomatis.';
   els.debtSubmitBtn.textContent = 'Tambah utang';
   els.debtCancelBtn.classList.add('hidden');
+}
+
+function handleDebtProofImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showToast('File tidak valid', 'Pilih file gambar (JPG, PNG, dll)', 'danger');
+    event.target.value = '';
+    return;
+  }
+
+  // Validate file size (< 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('File terlalu besar', 'Maksimal 5MB', 'danger');
+    event.target.value = '';
+    return;
+  }
+
+  // Convert to base64 for preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    els.debtProofPreview.innerHTML = `<img src="${base64}" alt="Preview" style="max-width:100%;max-height:200px;border-radius:8px;">`;
+    els.debtProofForm.dataset.imageData = base64;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDebtProofSubmit(event) {
+  event.preventDefault();
+
+  const platform = els.debtProofPlatform.value;
+  const name = els.debtProofName.value.trim();
+  const imageData = els.debtProofForm.dataset.imageData;
+  const user = getCurrentUser();
+
+  if (!platform || !name || !imageData) {
+    showToast('Data tidak lengkap', 'Pilih platform, nama, dan gambar', 'danger');
+    return;
+  }
+
+  const proof = {
+    id: Utils.uniqueId('proof'),
+    platform,
+    name,
+    image: imageData,
+    description: '',
+    uploadedBy: user.name,
+    uploadedAt: new Date().toISOString(),
+  };
+
+  state.debtProofs.push(proof);
+  saveState();
+  renderDebtProofGallery();
+  showToast('Bukti diupload', 'Dokumen pembayaran berhasil disimpan.', 'success');
+
+  // Reset form
+  els.debtProofPlatform.value = '';
+  els.debtProofName.value = '';
+  els.debtProofImage.value = '';
+  els.debtProofPreview.innerHTML = '';
+  delete els.debtProofForm.dataset.imageData;
 }
 
 function handleDebtTableAction(event) {
@@ -1673,6 +1783,32 @@ function handleDeleteUpload(uploadId) {
 function attachEvents() {
   els.loginForm.addEventListener('submit', handleLogin);
 
+  // Debt Details Tab Switching
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-btn')) {
+      const tabName = e.target.dataset.tab;
+
+      // Update button states
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.borderBottomColor = 'transparent';
+        btn.style.color = '#666';
+      });
+      e.target.classList.add('active');
+      e.target.style.borderBottomColor = '#007bff';
+      e.target.style.color = '#007bff';
+
+      // Update content visibility - use classList instead of inline styles
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      const activeTab = document.getElementById(tabName);
+      if (activeTab) {
+        activeTab.classList.add('active');
+      }
+    }
+  });
+
   // Upload events
   if (els.uploadImage) els.uploadImage.addEventListener('change', handleImageSelect);
   if (els.uploadForm) els.uploadForm.addEventListener('submit', handleUploadSubmit);
@@ -1706,11 +1842,22 @@ function attachEvents() {
       saveState();
       renderLaporanPanel();
       showToast('Item dihapus', 'Laporan berhasil dihapus.', 'success');
+    } else if (e.target.dataset.action === 'delete-proof') {
+      const id = e.target.dataset.id;
+      if (!window.confirm('Hapus bukti pembayaran ini?')) return;
+      state.debtProofs = state.debtProofs.filter(p => p.id !== id);
+      saveState();
+      renderDebtProofGallery();
+      showToast('Bukti dihapus', 'Dokumen pembayaran berhasil dihapus.', 'success');
     }
   });
 
   els.paymentForm.addEventListener('submit', handlePaymentSubmit);
   els.debtForm.addEventListener('submit', handleDebtSubmit);
+  if (els.debtProofForm) {
+    els.debtProofForm.addEventListener('submit', handleDebtProofSubmit);
+    els.debtProofImage.addEventListener('change', handleDebtProofImageSelect);
+  }
   els.debtCancelBtn.addEventListener('click', resetDebtForm);
   els.settingsForm.addEventListener('submit', handleSettingsSubmit);
   els.setDebtForm.addEventListener('submit', handleSetDebtSubmit);
