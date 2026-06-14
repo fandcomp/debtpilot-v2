@@ -926,7 +926,7 @@ function renderDebtProofGallery() {
 
   els.debtProofGallery.innerHTML = state.debtProofs.map(proof => `
     <div class="card" style="display:flex;gap:16px;padding:16px;margin-bottom:12px;">
-      <img src="${proof.image}" alt="${proof.name}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;">
+      <img src="${proof.image}" alt="${proof.name}" data-action="view-proof" data-id="${proof.id}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div style="flex:1;">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
           <div>
@@ -1256,6 +1256,25 @@ function openPaymentModal(payment) {
   els.paymentModal.setAttribute('aria-hidden', 'false');
 }
 
+function showImageModal(imageSource, title = 'Image') {
+  const imageModal = document.getElementById('imageModal');
+  const modalImage = document.getElementById('modalImage');
+  if (imageModal && modalImage) {
+    modalImage.src = imageSource;
+    modalImage.alt = title;
+    imageModal.classList.remove('hidden');
+    imageModal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeImageModal() {
+  const imageModal = document.getElementById('imageModal');
+  if (imageModal) {
+    imageModal.classList.add('hidden');
+    imageModal.setAttribute('aria-hidden', 'true');
+  }
+}
+
 function closePaymentModal() {
   els.paymentModal.classList.add('hidden');
   els.paymentModal.setAttribute('aria-hidden', 'true');
@@ -1287,6 +1306,13 @@ function handleEditPaymentSubmit(event) {
 function handleModalClick(event) {
   if (event.target.matches('[data-close-modal]') || event.target === els.paymentModal.querySelector('.modal-backdrop')) {
     closePaymentModal();
+  }
+}
+
+function handleImageModalClick(event) {
+  const imageModal = document.getElementById('imageModal');
+  if (event.target.matches('[data-close-modal]') || event.target === imageModal?.querySelector('.modal-backdrop')) {
+    closeImageModal();
   }
 }
 
@@ -1857,6 +1883,12 @@ function attachEvents() {
       saveState();
       renderLaporanPanel();
       showToast('Item dihapus', 'Laporan berhasil dihapus.', 'success');
+    } else if (e.target.dataset.action === 'view-proof') {
+      const id = e.target.dataset.id;
+      const proof = state.debtProofs.find(p => p.id === id);
+      if (proof) {
+        showImageModal(proof.image, proof.name);
+      }
     } else if (e.target.dataset.action === 'delete-proof') {
       const id = e.target.dataset.id;
       if (!window.confirm('Hapus bukti pembayaran ini?')) return;
@@ -1893,10 +1925,18 @@ function attachEvents() {
   els.historyPlatformFilter.addEventListener('change', handleHistoryFilterChange);
   els.historySortFilter.addEventListener('change', handleHistoryFilterChange);
   els.paymentModal.addEventListener('click', handleModalClick);
+
+  // Image modal
+  const imageModal = document.getElementById('imageModal');
+  if (imageModal) {
+    imageModal.addEventListener('click', handleImageModalClick);
+  }
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeSidebar();
       closePaymentModal();
+      closeImageModal();
     }
   });
 }

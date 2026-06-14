@@ -234,7 +234,7 @@
         <div style="display:flex;justify-content:center;margin-bottom:24px;">
           <div class="tab-switcher">
             <button class="tab-switch-btn active" data-tab="debt-rincian" type="button">Rincian Per Platform</button>
-            <button class="tab-switch-btn" data-tab="debt-bukti" type="button">Bukti Pembayaran</button>
+            <button class="tab-switch-btn" data-tab="debt-bukti" type="button">Bukti</button>
           </div>
         </div>
 
@@ -571,6 +571,15 @@
           <button class="primary-btn" type="submit">Simpan perubahan</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Image Fullscreen Modal -->
+  <div class="modal hidden" id="imageModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-image-container">
+      <button class="modal-close-btn" type="button" data-close-modal">✕</button>
+      <img id="modalImage" src="" alt="Fullscreen image" style="max-width:90vw;max-height:90vh;object-fit:contain;">
     </div>
   </div>
 
