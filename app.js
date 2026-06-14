@@ -1785,20 +1785,16 @@ function attachEvents() {
 
   // Debt Details Tab Switching
   document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tab-btn')) {
+    if (e.target.classList.contains('tab-switch-btn')) {
       const tabName = e.target.dataset.tab;
 
       // Update button states
-      document.querySelectorAll('.tab-btn').forEach(btn => {
+      document.querySelectorAll('.tab-switch-btn').forEach(btn => {
         btn.classList.remove('active');
-        btn.style.borderBottomColor = 'transparent';
-        btn.style.color = '#666';
       });
       e.target.classList.add('active');
-      e.target.style.borderBottomColor = '#007bff';
-      e.target.style.color = '#007bff';
 
-      // Update content visibility - use classList instead of inline styles
+      // Update content visibility
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
       });
