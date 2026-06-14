@@ -1045,13 +1045,23 @@ function renderDateDefaults() {
 
 function renderDebtFormVisibility() {
   const debtFormContainer = document.getElementById('debtFormContainer');
-  if (!debtFormContainer) return;
-
+  const debtProofContainer = document.getElementById('debtProofContainer');
   const isAdminUser = isAdmin();
-  if (isAdminUser) {
-    debtFormContainer.classList.remove('hidden');
-  } else {
-    debtFormContainer.classList.add('hidden');
+
+  if (debtFormContainer) {
+    if (isAdminUser) {
+      debtFormContainer.classList.remove('hidden');
+    } else {
+      debtFormContainer.classList.add('hidden');
+    }
+  }
+
+  if (debtProofContainer) {
+    if (isAdminUser) {
+      debtProofContainer.classList.remove('hidden');
+    } else {
+      debtProofContainer.classList.add('hidden');
+    }
   }
 }
 
