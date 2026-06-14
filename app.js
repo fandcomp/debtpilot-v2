@@ -584,7 +584,7 @@ function renderSummaryCards(totals) {
 
 function renderDashboardCharts(totals, summaries) {
   els.heroTotalDebt.textContent = Format.money(totals.totalDebt);
-  els.heroSubtitle.textContent = `Total sudah dibayar ${Format.money(totals.totalPaid)} dan sisa utang ${Format.money(totals.totalRemaining)}. Fokus utama adalah menjaga ritme pembayaran menuju target ${Format.money(state.settings.monthlyTarget)} per bulan.`;
+  els.heroSubtitle.textContent = `Total sudah dibayar ${Format.money(totals.totalPaid)} dan sisa utang ${Format.money(totals.totalRemaining)}.`;
   els.heroProgressLabel.textContent = Format.percent(totals.repaymentRatio);
   els.heroProgressFill.style.width = `${Utils.clamp(totals.repaymentRatio * 100, 0, 100)}%`;
 
@@ -594,25 +594,8 @@ function renderDashboardCharts(totals, summaries) {
 }
 
 function renderInsights() {
-  const insights = Calc.generateInsights();
-  if (!insights.length) {
-    els.insightsContainer.innerHTML = '';
-    return;
-  }
-
-  els.insightsContainer.innerHTML = `
-    <div class="insights-grid">
-      ${insights.map((insight) => `
-        <div class="card insight-card insight-${insight.type}">
-          <div class="insight-icon">${insight.icon}</div>
-          <div class="insight-content">
-            <strong>${insight.title}</strong>
-            <p>${insight.message}</p>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  // Insights disabled - only show empty container
+  els.insightsContainer.innerHTML = '';
 }
 
 // ========== CHART BUILDERS ==========
