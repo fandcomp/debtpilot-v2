@@ -1129,7 +1129,11 @@ function showLogin() {
 }
 
 // ========== NOTIFICATIONS ==========
-function showToast(title, message, tone = 'success') {
+function showToast(title, message, tone = 'success', isDebtRelated = false) {
+  // Only show toast for debt-related operations
+  if (!isDebtRelated && !message.includes('utang') && !message.includes('debt')) {
+    return; // Suppress non-debt toasts
+  }
   const toast = document.createElement('div');
   toast.className = `toast ${tone}`;
   toast.innerHTML = `<strong>${title}</strong><span>${message}</span>`;
