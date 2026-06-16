@@ -875,7 +875,8 @@ function renderLaporanPanel() {
 
 // ========== RENDER: PAYMENT PANEL ==========
 function renderPlatformSelectors() {
-  const options = PLATFORM_ORDER.map((platform) => `<option value="${platform}">${platform}</option>`).join('');
+  const summaries = Calc.platformSummaries();
+  const options = summaries.map((s) => `<option value="${s.platform}">${s.platform}</option>`).join('');
   els.paymentPlatform.innerHTML = options;
   els.editPaymentPlatform.innerHTML = options;
   els.historyPlatformFilter.innerHTML = `<option value="all">All platforms</option>${options}`;
