@@ -71,9 +71,9 @@
         <button class="nav-link" type="button" data-panel="upload">Upload Bukti</button>
         <button class="nav-link hidden" type="button" data-panel="transaksi">Transaksi (Admin)</button>
         <button class="nav-link" type="button" data-panel="laporan">Laporan</button>
-        <button class="nav-link" type="button" data-panel="update-payment">Update Payment</button>
+        <button class="nav-link admin-only" type="button" data-panel="update-payment">Update Payment</button>
         <button class="nav-link" type="button" data-panel="debt-details">Debt Details</button>
-        <button class="nav-link" type="button" data-panel="payment-history">Payment History</button>
+        <button class="nav-link admin-only" type="button" data-panel="payment-history">Payment History</button>
         <button class="nav-link" type="button" data-panel="settings">Settings</button>
       </nav>
 
@@ -155,7 +155,7 @@
         </div>
       </section>
 
-      <section class="panel" id="update-paymentPanel">
+      <section class="panel admin-only" id="update-paymentPanel">
         <div class="section-head">
           <div>
             <p class="eyebrow">Update Payment</p>
@@ -334,7 +334,7 @@
         </div>
       </section>
 
-      <section class="panel" id="payment-historyPanel">
+      <section class="panel admin-only" id="payment-historyPanel">
         <div class="section-head">
           <div>
             <p class="eyebrow">Payment History</p>

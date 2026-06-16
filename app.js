@@ -1041,9 +1041,21 @@ function renderDateDefaults() {
 }
 
 function renderDebtFormVisibility() {
+  const isAdminUser = isAdmin();
+
+  // Admin-only elements
+  const adminOnlyElements = document.querySelectorAll('.admin-only');
+  adminOnlyElements.forEach((el) => {
+    if (isAdminUser) {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
+
+  // Legacy: debtFormContainer and debtProofContainer
   const debtFormContainer = document.getElementById('debtFormContainer');
   const debtProofContainer = document.getElementById('debtProofContainer');
-  const isAdminUser = isAdmin();
 
   if (debtFormContainer) {
     if (isAdminUser) {
