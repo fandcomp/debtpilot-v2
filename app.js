@@ -828,43 +828,48 @@ function renderLaporanPanel() {
   }
 
   container.innerHTML = laporanData.map(item => `
-    <div class="laporan-card card">
+    <div class="laporan-card">
+      <!-- Header dengan badge platform -->
       <div class="laporan-card-header">
-        <div class="laporan-info">
-          <div class="laporan-date">${Format.date(item.tanggal)}</div>
-          <div class="laporan-platform"><strong>${item.platform}</strong></div>
-          <div class="laporan-nominal">${Format.money(item.nominal)}</div>
-        </div>
+        <div class="laporan-platform-badge">${item.platform}</div>
+        <div class="laporan-date">${Format.date(item.tanggal)}</div>
+        <div class="laporan-nominal">${Format.money(item.nominal)}</div>
       </div>
 
-      <div class="laporan-card-body">
-        <div class="laporan-image-section">
-          <img src="${item.nota}" alt="Bukti pembayaran" class="laporan-image" onclick="showImageModal('${item.nota}')">
+      <!-- Main content area -->
+      <div class="laporan-card-content">
+        <!-- Image section lebih prominent -->
+        <div class="laporan-image-container">
+          <img src="${item.nota}" alt="Bukti pembayaran ${item.platform}" class="laporan-image" onclick="showImageModal('${item.nota}')">
+          <div class="image-overlay">Klik untuk lihat detail</div>
         </div>
 
-        <div class="laporan-details">
-          <div class="detail-item">
-            <span class="detail-label">Tanggal</span>
-            <span class="detail-value">${Format.date(item.tanggal)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Platform</span>
-            <span class="detail-value">${item.platform}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Nominal</span>
-            <span class="detail-value"><strong>${Format.money(item.nominal)}</strong></span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Keterangan</span>
-            <div class="keterangan-section">
-              ${isAdminUser ? `
-                <input type="text" value="${item.keterangan}" class="keterangan-edit" data-id="${item.id}" placeholder="Tambahkan keterangan...">
-                <div style="display:flex;gap:8px;margin-top:6px;">
-                  <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn" style="font-size:0.85rem;padding:6px 12px;flex:1;">Simpan</button>
-                  <button type="button" data-action="delete-laporan" data-id="${item.id}" class="danger-btn" style="font-size:0.85rem;padding:6px 12px;flex:1;">Hapus</button>
-                </div>
-              ` : `<span class="detail-value">${item.keterangan || '-'}</span>`}
+        <!-- Details section dengan layout grid yang lebih rapi -->
+        <div class="laporan-details-section">
+          <div class="details-grid">
+            <div class="detail-row">
+              <span class="detail-label">Tanggal</span>
+              <span class="detail-value">${Format.date(item.tanggal)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Platform</span>
+              <span class="detail-value">${item.platform}</span>
+            </div>
+            <div class="detail-row highlight">
+              <span class="detail-label">Jumlah Pembayaran</span>
+              <span class="detail-value amount">${Format.money(item.nominal)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Keterangan</span>
+              <div class="keterangan-section">
+                ${isAdminUser ? `
+                  <input type="text" value="${item.keterangan || ''}" class="keterangan-edit" data-id="${item.id}" placeholder="Tambahkan catatan...">
+                  <div class="keterangan-actions">
+                    <button type="button" data-action="save-keterangan" data-id="${item.id}" class="primary-btn btn-sm">Simpan</button>
+                    <button type="button" data-action="delete-laporan" data-id="${item.id}" class="danger-btn btn-sm">Hapus</button>
+                  </div>
+                ` : `<span class="detail-value">${item.keterangan || '—'}</span>`}
+              </div>
             </div>
           </div>
         </div>
