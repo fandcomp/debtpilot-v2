@@ -76,6 +76,34 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('payment-proofs', 'payment-proofs', true);
 ```
 
+**Wajib**: tambahkan policy agar aplikasi (anon key) bisa membaca dan meng-upload gambar ke bucket ini. Jalankan di SQL Editor:
+
+```sql
+CREATE POLICY "Public read payment-proofs"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'payment-proofs');
+
+CREATE POLICY "Anon upload payment-proofs"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'payment-proofs');
+```
+
+Tanpa policy INSERT di atas, upload gambar akan gagal diam-diam dan aplikasi
+kembali menyimpan base64 di `app_state` (membuat loading lambat).
+
+### C. Migrasi Gambar Lama (base64 → Storage)
+
+Jika `app_state` sudah telanjur berisi gambar base64 (state membengkak, loading lambat),
+jalankan skrip migrasi satu kali setelah bucket + policy dibuat:
+
+```bash
+node scripts/migrate-images.js --dry-run   # cek dulu apa yang akan dimigrasikan
+node scripts/migrate-images.js             # jalankan migrasi
+```
+
+Skrip akan meng-upload semua gambar base64 di `uploads`, `laporan`, dan `debtProofs`
+ke bucket `payment-proofs`, lalu mengganti field-nya dengan URL.
+
 ## 3. Get Credentials dari Supabase
 
 Di Supabase Dashboard (https://app.supabase.com):

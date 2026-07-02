@@ -745,7 +745,7 @@ function renderUploadHistory() {
   els.uploadHistoryBody.innerHTML = uploads.map(upload => `
     <tr>
       <td>${Format.date(upload.uploadedAt.split('T')[0])}</td>
-      <td><img src="${upload.imageThumbnail}" alt="bukti" style="max-width:60px;height:auto;border-radius:4px;"></td>
+      <td><img src="${upload.imageThumbnail}" alt="bukti" loading="lazy" style="max-width:60px;height:auto;border-radius:4px;"></td>
       <td>${Format.money(upload.nominal)}</td>
       <td><span class="status-badge ${upload.status === 'pending' ? 'status-soon' : 'status-paid'}">${upload.status === 'pending' ? 'Menunggu' : 'Disetujui'}</span></td>
       <td>
@@ -778,7 +778,7 @@ function renderTransaksiPanel() {
       ${pendingUploads.map(upload => `
         <div class="card transaksi-card">
           <div class="transaksi-image">
-            <img src="${upload.imageThumbnail}" alt="bukti" style="max-width:100%;height:auto;border-radius:8px;">
+            <img src="${upload.imageThumbnail}" alt="bukti" loading="lazy" style="max-width:100%;height:auto;border-radius:8px;">
           </div>
           <div class="transaksi-info">
             <p class="transaksi-user"><strong>User:</strong> ${upload.username}</p>
@@ -838,7 +838,7 @@ function renderLaporanPanel() {
       <div class="laporan-card-content">
         <!-- Image section lebih prominent -->
         <div class="laporan-image-container">
-          <img src="${item.nota}" alt="Bukti pembayaran ${item.platform}" class="laporan-image" onclick="showImageModal('${item.nota}')">
+          <img src="${item.nota}" alt="Bukti pembayaran ${item.platform}" class="laporan-image" loading="lazy" onclick="showImageModal('${item.nota}')">
           <div class="image-overlay">Klik untuk lihat detail</div>
         </div>
 
@@ -921,7 +921,7 @@ function renderDebtProofGallery() {
 
   els.debtProofGallery.innerHTML = state.debtProofs.map(proof => `
     <div class="card" style="display:flex;gap:16px;padding:16px;margin-bottom:12px;">
-      <img src="${proof.image}" alt="${proof.name}" data-action="view-proof" data-id="${proof.id}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+      <img src="${proof.image}" alt="${proof.name}" data-action="view-proof" data-id="${proof.id}" loading="lazy" style="width:120px;height:120px;object-fit:cover;border-radius:8px;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
       <div style="flex:1;">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
           <div>
@@ -1396,17 +1396,22 @@ function handleDebtProofImageSelect(event) {
     return;
   }
 
-  // Convert to base64 for preview
+  // Convert to base64 for preview (dikompres agar state tidak membengkak)
   const reader = new FileReader();
   reader.onload = (e) => {
-    const base64 = e.target.result;
-    els.debtProofPreview.innerHTML = `<img src="${base64}" alt="Preview" style="max-width:100%;max-height:200px;border-radius:8px;">`;
-    els.debtProofForm.dataset.imageData = base64;
+    compressImage(e.target.result)
+      .then((compressed) => {
+        els.debtProofPreview.innerHTML = `<img src="${compressed}" alt="Preview" style="max-width:100%;max-height:200px;border-radius:8px;">`;
+        els.debtProofForm.dataset.imageData = compressed;
+      })
+      .catch(() => {
+        showToast('Gambar tidak valid', 'File tidak bisa dibaca sebagai gambar.', 'danger');
+      });
   };
   reader.readAsDataURL(file);
 }
 
-function handleDebtProofSubmit(event) {
+async function handleDebtProofSubmit(event) {
   event.preventDefault();
 
   // Get form directly instead of via els
@@ -1421,11 +1426,14 @@ function handleDebtProofSubmit(event) {
     return;
   }
 
+  // Simpan URL Storage; base64 terkompresi hanya jika Storage gagal
+  const imageUrl = await uploadImageToSupabase(`debt-proof-${name}.jpg`, imageData);
+
   const proof = {
     id: Utils.uniqueId('proof'),
     platform,
     name,
-    image: imageData,
+    image: imageUrl || imageData,
     description: '',
     uploadedBy: user.name,
     uploadedAt: new Date().toISOString(),
@@ -1627,6 +1635,26 @@ function handleResetData() {
 }
 
 // ========== UPLOAD & TRANSAKSI HANDLERS ==========
+// ========== IMAGE COMPRESSION ==========
+const IMAGE_MAX_DIMENSION = 1200;
+const IMAGE_QUALITY = 0.7;
+
+function compressImage(dataUrl, maxDimension = IMAGE_MAX_DIMENSION, quality = IMAGE_QUALITY) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Gagal membaca gambar'));
+    img.src = dataUrl;
+  });
+}
+
 function handleImageSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1646,15 +1674,20 @@ function handleImageSelect(event) {
     return;
   }
 
-  // Preview image
+  // Preview image (dikompres dulu agar state tidak membengkak)
   const reader = new FileReader();
   reader.onload = (e) => {
-    console.log('✅ Image preview ready');
-    els.imagePreview.innerHTML = `<img src="${e.target.result}" alt="preview" style="max-width:200px;height:auto;border-radius:8px;">`;
-    els.imagePreview.classList.remove('hidden');
-    // Store temporarily as base64
-    els.uploadForm.dataset.imageData = e.target.result;
-    els.uploadForm.dataset.fileName = file.name;
+    compressImage(e.target.result)
+      .then((compressed) => {
+        console.log(`✅ Image compressed: ${Math.round(compressed.length / 1024)}KB`);
+        els.imagePreview.innerHTML = `<img src="${compressed}" alt="preview" style="max-width:200px;height:auto;border-radius:8px;">`;
+        els.imagePreview.classList.remove('hidden');
+        els.uploadForm.dataset.imageData = compressed;
+        els.uploadForm.dataset.fileName = file.name;
+      })
+      .catch(() => {
+        showToast('Gambar tidak valid', 'File tidak bisa dibaca sebagai gambar.', 'danger');
+      });
   };
   reader.readAsDataURL(file);
 }
@@ -1672,8 +1705,9 @@ async function uploadImageToSupabase(fileName, fileData) {
     const response = await fetch(fileData);
     const blob = await response.blob();
 
-    // Upload to storage
-    const filePath = `${new Date().getTime()}-${fileName}`;
+    // Upload to storage (nama file dibersihkan agar aman untuk URL)
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = `${new Date().getTime()}-${safeName}`;
     const { data, error } = await supabaseClient.storage
       .from('payment-proofs')
       .upload(filePath, blob, { cacheControl: '3600' });
@@ -1696,7 +1730,7 @@ async function uploadImageToSupabase(fileName, fileData) {
   }
 }
 
-function handleUploadSubmit(event) {
+async function handleUploadSubmit(event) {
   event.preventDefault();
   console.log('📤 Upload submit...');
 
@@ -1717,33 +1751,23 @@ function handleUploadSubmit(event) {
     return;
   }
 
+  // Upload ke Supabase Storage; state hanya menyimpan URL.
+  // Base64 terkompresi hanya dipakai jika Storage gagal.
+  const imageUrl = await uploadImageToSupabase(fileName, imageData);
+
   const uploadId = Utils.uniqueId('upload');
   const upload = {
     id: uploadId,
     userId: user.id,
     username: user.name,
-    imageThumbnail: imageData, // Always store base64 as fallback
-    imageUrl: null, // Will be filled if Supabase succeeds
+    imageThumbnail: imageUrl || imageData,
+    imageUrl,
     nominal: Math.round(nominal),
     status: 'pending',
     uploadedAt: new Date().toISOString(),
     approvedBy: null,
     approvedAt: null
   };
-
-  // Try uploading to Supabase in background
-  if (supabaseClient) {
-    uploadImageToSupabase(fileName, imageData).then(url => {
-      if (url) {
-        const uploadIndex = state.uploads.findIndex(u => u.id === uploadId);
-        if (uploadIndex >= 0) {
-          state.uploads[uploadIndex].imageUrl = url;
-          saveState();
-          console.log('✅ Image URL saved to state');
-        }
-      }
-    });
-  }
 
   state.uploads.push(upload);
   saveState();
