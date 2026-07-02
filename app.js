@@ -496,8 +496,6 @@ const els = {
   historySortFilter: document.getElementById('historySortFilter'),
   historyTableBody: document.getElementById('historyTableBody'),
   settingsForm: document.getElementById('settingsForm'),
-  settingsUsername: document.getElementById('settingsUsername'),
-  settingsPassword: document.getElementById('settingsPassword'),
   settingsMonthlyTarget: document.getElementById('settingsMonthlyTarget'),
   settingsTargetDate: document.getElementById('settingsTargetDate'),
   setDebtForm: document.getElementById('setDebtForm'),
@@ -1026,8 +1024,6 @@ function applyHistoryFilters() {
 
 // ========== RENDER: SETTINGS PANEL ==========
 function renderSettingsForm() {
-  els.settingsUsername.value = state.auth.username;
-  els.settingsPassword.value = state.auth.password;
   els.settingsMonthlyTarget.value = state.settings.monthlyTarget;
   els.settingsTargetDate.value = state.settings.targetDate;
 }
@@ -1218,14 +1214,11 @@ function handlePaymentSubmit(event) {
 // ========== FORM: SETTINGS ==========
 function handleSettingsSubmit(event) {
   event.preventDefault();
-  state.auth.username = els.settingsUsername.value.trim() || state.auth.username;
-  state.auth.password = els.settingsPassword.value || state.auth.password;
   state.settings.monthlyTarget = Math.max(0, Number(els.settingsMonthlyTarget.value) || 0);
   state.settings.targetDate = els.settingsTargetDate.value;
   saveState();
-  setAuthenticated(false);
-  showLogin();
-  showToast('Setting diperbarui', 'Silakan login kembali dengan kredensial baru.', 'success');
+  renderAll();
+  showToast('Setting diperbarui', 'Target pembayaran berhasil disimpan.', 'success');
 }
 
 // ========== PAYMENT: HISTORY ACTIONS ==========
@@ -1838,9 +1831,13 @@ function handleDeleteUpload(uploadId) {
 }
 
 // ========== EVENT ATTACHMENT ==========
-function attachEvents() {
+// Dipasang sebelum init() menunggu Supabase, agar tombol Login
+// langsung berfungsi tanpa menunggu state selesai di-download.
+function attachLoginEvents() {
   els.loginForm.addEventListener('submit', handleLogin);
+}
 
+function attachEvents() {
   // Debt Details Tab Switching
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('tab-switch-btn')) {
@@ -1959,6 +1956,10 @@ async function init() {
   try {
     console.log('🚀 App initializing...');
 
+    // Login harus bisa dipakai segera, tanpa menunggu network
+    attachLoginEvents();
+    renderLoginHint();
+
     // Initialize Supabase
     const supabaseReady = await initSupabase();
     console.log('Supabase status:', supabaseReady ? '✅ Connected' : '⚠️ Not connected (will use localStorage)');
@@ -1988,7 +1989,6 @@ async function init() {
     }
 
     attachEvents();
-    renderLoginHint();
     renderDateDefaults();
     renderQuickAmountButtons();
 
@@ -1998,7 +1998,8 @@ async function init() {
       renderAll();
       console.log('✅ App loaded - authenticated');
     } else {
-      showLogin();
+      // Login view sudah tampil sejak awal; jangan panggil showLogin()
+      // agar input yang sedang diketik user tidak terhapus.
       console.log('✅ App loaded - showing login');
     }
   } catch (error) {
